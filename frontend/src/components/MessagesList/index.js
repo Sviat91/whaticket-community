@@ -42,7 +42,8 @@ const useStyles = makeStyles((theme) => ({
   },
 
   messagesList: {
-    backgroundImage: `url(${whatsBackground})`,
+    backgroundImage: theme.palette.type === "dark" ? "none" : `url(${whatsBackground})`,
+    backgroundColor: theme.palette.type === "dark" ? "#0B141A" : "transparent",
     display: "flex",
     flexDirection: "column",
     flexGrow: 1,
@@ -79,8 +80,8 @@ const useStyles = makeStyles((theme) => ({
     },
 
     whiteSpace: "pre-wrap",
-    backgroundColor: "#ffffff",
-    color: "#303030",
+    backgroundColor: theme.palette.type === "dark" ? "#202C33" : "#ffffff",
+    color: theme.palette.text.primary,
     alignSelf: "flex-start",
     borderTopLeftRadius: 0,
     borderTopRightRadius: 8,
@@ -90,13 +91,13 @@ const useStyles = makeStyles((theme) => ({
     paddingRight: 5,
     paddingTop: 5,
     paddingBottom: 0,
-    boxShadow: "0 1px 1px #b3b3b3",
+    boxShadow: theme.palette.type === "dark" ? "0 1px 1px #0a0f12" : "0 1px 1px #b3b3b3",
   },
 
   quotedContainerLeft: {
     margin: "-3px -80px 6px -6px",
     overflow: "hidden",
-    backgroundColor: "#f0f0f0",
+    backgroundColor: theme.palette.type === "dark" ? "#1A272F" : "#f0f0f0",
     borderRadius: "7.5px",
     display: "flex",
     position: "relative",
@@ -133,8 +134,8 @@ const useStyles = makeStyles((theme) => ({
     },
 
     whiteSpace: "pre-wrap",
-    backgroundColor: "#dcf8c6",
-    color: "#303030",
+    backgroundColor: theme.palette.type === "dark" ? "#005C4B" : "#dcf8c6",
+    color: theme.palette.text.primary,
     alignSelf: "flex-end",
     borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
@@ -144,13 +145,13 @@ const useStyles = makeStyles((theme) => ({
     paddingRight: 5,
     paddingTop: 5,
     paddingBottom: 0,
-    boxShadow: "0 1px 1px #b3b3b3",
+    boxShadow: theme.palette.type === "dark" ? "0 1px 1px #0a0f12" : "0 1px 1px #b3b3b3",
   },
 
   quotedContainerRight: {
     margin: "-3px -80px 6px -6px",
     overflowY: "hidden",
-    backgroundColor: "#cfe9ba",
+    backgroundColor: theme.palette.type === "dark" ? "#025144" : "#cfe9ba",
     borderRadius: "7.5px",
     display: "flex",
     position: "relative",
@@ -220,14 +221,14 @@ const useStyles = makeStyles((theme) => ({
     textAlign: "center",
     alignSelf: "center",
     width: "110px",
-    backgroundColor: "#e1f3fb",
+    backgroundColor: theme.palette.type === "dark" ? "#1F2C34" : "#e1f3fb",
     margin: "10px",
     borderRadius: "10px",
     boxShadow: "0 1px 1px #b3b3b3",
   },
 
   dailyTimestampText: {
-    color: "#808888",
+    color: theme.palette.text.secondary,
     padding: 8,
     alignSelf: "center",
     marginLeft: "0px",
@@ -307,7 +308,7 @@ const reducer = (state, action) => {
   }
 };
 
-const MessagesList = ({ ticketId, isGroup }) => {
+const MessagesList = ({ ticketId, isGroup, pendingMessages = [], onFromMeMessage }) => {
   const classes = useStyles();
 
   const [messagesList, dispatch] = useReducer(reducer, []);
@@ -367,6 +368,9 @@ const MessagesList = ({ ticketId, isGroup }) => {
       if (data.action === "create") {
         dispatch({ type: "ADD_MESSAGE", payload: data.message });
         scrollToBottom();
+        if (data.message.fromMe && onFromMeMessage) {
+          onFromMeMessage();
+        }
         if (
           String(data.message.ticketId) === String(ticketId) &&
           document.visibilityState === "visible"
@@ -383,6 +387,7 @@ const MessagesList = ({ ticketId, isGroup }) => {
     return () => {
       socket.disconnect();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ticketId]);
 
   const loadMore = () => {
@@ -548,15 +553,6 @@ const MessagesList = ({ ticketId, isGroup }) => {
         );
       }
     }
-    if (index === messagesList.length - 1) {
-      return (
-        <div
-          key={`ref-${message.createdAt}`}
-          ref={lastMessageRef}
-          style={{ float: "left", clear: "both" }}
-        />
-      );
-    }
   };
 
   const renderMessageDivider = (message, index) => {
@@ -696,6 +692,20 @@ const MessagesList = ({ ticketId, isGroup }) => {
         onScroll={handleScroll}
       >
         {messagesList.length > 0 ? renderMessages() : []}
+        {pendingMessages.map(msg => (
+          <div key={msg.id} className={classes.messageRight} style={{ opacity: 0.65 }}>
+            {msg.mediaType === "image" && (
+              <img src={msg.previewUrl} className={classes.messageMedia} alt="" />
+            )}
+            <div className={classes.textContentItem}>
+              {msg.body && <MarkdownWrapper>{msg.body}</MarkdownWrapper>}
+              <span className={classes.timestamp}>
+                <AccessTime fontSize="small" className={classes.ackIcons} />
+              </span>
+            </div>
+          </div>
+        ))}
+        <div ref={lastMessageRef} style={{ float: "left", clear: "both" }} />
       </div>
       {loading && (
         <div>

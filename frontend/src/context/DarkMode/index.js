@@ -6,21 +6,36 @@ import { CssBaseline } from "@material-ui/core";
 const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(
+    localStorage.getItem("darkMode") === "true"
+  );
 
   const toggleTheme = () => {
-    setDarkMode((prevMode) => !prevMode);
+    setDarkMode((prev) => {
+      localStorage.setItem("darkMode", !prev);
+      return !prev;
+    });
   };
 
-  const theme = useMemo(
-    () =>
-      createMuiTheme({
-        palette: {
-          type: darkMode ? "dark" : "light",
+  const theme = useMemo(() => createMuiTheme({
+    palette: {
+      type: darkMode ? "dark" : "light",
+      primary: { main: "#25D366" },
+      ...(darkMode && {
+        background: {
+          default: "#111B21",
+          paper:   "#1F2C34",
         },
       }),
-    [darkMode]
-  );
+    },
+    scrollbarStyles: {
+      "&::-webkit-scrollbar": { width: "6px", height: "6px" },
+      "&::-webkit-scrollbar-thumb": {
+        backgroundColor: darkMode ? "#374045" : "#c1c1c1",
+        borderRadius: "3px",
+      },
+    },
+  }), [darkMode]);
 
   const contextValue = useMemo(() => ({ darkMode, toggleTheme }), [darkMode]);
 

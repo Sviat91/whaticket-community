@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useHistory } from "react-router-dom";
 
 import { toast } from "react-toastify";
@@ -84,6 +84,8 @@ const Ticket = () => {
   const [ticket, setTicket] = useState({});
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [droppedFiles, setDroppedFiles] = useState([]);
+  const [pendingMessages, setPendingMessages] = useState([]);
+  const pendingRef = useRef([]);
 
   useEffect(() => {
     setLoading(true);
@@ -145,6 +147,19 @@ const Ticket = () => {
     setDrawerOpen(false);
   };
 
+  const handleOptimisticSend = (msgs) => {
+    pendingRef.current = [...pendingRef.current, ...msgs];
+    setPendingMessages([...pendingRef.current]);
+  };
+
+  const handleClearOldestPending = () => {
+    if (pendingRef.current.length === 0) return;
+    const removed = pendingRef.current[0];
+    if (removed.previewUrl) URL.revokeObjectURL(removed.previewUrl);
+    pendingRef.current = pendingRef.current.slice(1);
+    setPendingMessages([...pendingRef.current]);
+  };
+
   const handleDragOver = e => {
     e.preventDefault();
     setIsDraggingOver(true);
@@ -203,11 +218,14 @@ const Ticket = () => {
           <MessagesList
             ticketId={ticketId}
             isGroup={ticket.isGroup}
+            pendingMessages={pendingMessages}
+            onFromMeMessage={handleClearOldestPending}
           ></MessagesList>
           <MessageInput
             ticketStatus={ticket.status}
             droppedFiles={droppedFiles}
             onDropHandled={() => setDroppedFiles([])}
+            onOptimisticSend={handleOptimisticSend}
           />
         </ReplyMessageProvider>
       </Paper>

@@ -110,6 +110,6 @@ That case returned `<div ref={lastMessageRef} ... />` — we move this ref to th
 ```
 
 ## Checkboxes
-- [ ] Ticket/index.js: pendingMessages state + ref + handlers + pass props
-- [ ] MessageInput/index.js: onOptimisticSend prop + rewrite media branch
-- [ ] MessagesList/index.js: props + socket handler + renderDailyTimestamps + JSX
+- [x] Ticket/index.js: pendingMessages state + ref + handlers + pass props
+- [x] MessageInput/index.js: onOptimisticSend prop + rewrite media branch
+- [x] MessagesList/index.js: props + socket handler + renderDailyTimestamps + JSX

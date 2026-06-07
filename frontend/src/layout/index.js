@@ -11,12 +11,10 @@ import {
   MenuItem,
   IconButton,
   Menu,
-  Switch,
 } from "@material-ui/core";
 import MenuIcon from "@material-ui/icons/Menu";
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 import AccountCircle from "@material-ui/icons/AccountCircle";
-import Brightness4Icon from "@material-ui/icons/Brightness4";
 
 import MainListItems from "./MainListItems";
 import NotificationsPopOver from "../components/NotificationsPopOver";
@@ -111,17 +109,7 @@ const useStyles = makeStyles((theme) => ({
     overflow: "auto",
     flexDirection: "column",
   },
-  switch: {
-    transform: "scale(0.8)",
-  },
   iconButton: {
-    color: theme.palette.text.primary,
-  },
-  themeSwitchContainer: {
-    display: "flex",
-    alignItems: "center",
-  },
-  themeIcon: {
     color: theme.palette.text.primary,
   },
 }));
@@ -232,18 +220,16 @@ const LoggedInLayout = ({ children }) => {
             noWrap
             className={classes.title}
           >
-            WhaTicket
+            AVS-Chats
           </Typography>
 
-          <div className={classes.themeSwitchContainer}>
-            <Brightness4Icon className={classes.themeIcon} />
-            <Switch
-              checked={darkMode}
-              onChange={toggleTheme}
-              color="default"
-              className={classes.switch}
+          <IconButton onClick={toggleTheme} size="small" style={{ padding: 6 }}>
+            <img
+              src={darkMode ? "/Dark.png" : "/Light.png"}
+              alt="toggle theme"
+              style={{ width: 32, height: 32, objectFit: "contain" }}
             />
-          </div>
+          </IconButton>
 
           {user.id && (
             <NotificationsPopOver className={classes.iconButton} />

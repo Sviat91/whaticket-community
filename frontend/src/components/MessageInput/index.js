@@ -53,7 +53,7 @@ const initRecorder = async () => {
 
 const useStyles = makeStyles(theme => ({
   mainWrapper: {
-    background: "#eee",
+    background: theme.palette.background.default,
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
@@ -71,7 +71,7 @@ const useStyles = makeStyles(theme => ({
     alignItems: "center",
     padding: "8px 10px",
     width: "100%",
-    background: "#f0f0f0",
+    background: theme.palette.background.paper,
     borderTop: "1px solid rgba(0,0,0,0.08)",
     gap: 8,
     boxSizing: "border-box",
@@ -87,7 +87,7 @@ const useStyles = makeStyles(theme => ({
 
 
   newMessageBox: {
-    background: "#eee",
+    background: theme.palette.background.default,
     width: "100%",
     display: "flex",
     padding: "7px",
@@ -97,7 +97,7 @@ const useStyles = makeStyles(theme => ({
   messageInputWrapper: {
     padding: 6,
     marginRight: 7,
-    background: "#fff",
+    background: theme.palette.background.paper,
     display: "flex",
     borderRadius: 20,
     flex: 1,
@@ -203,9 +203,9 @@ const useStyles = makeStyles(theme => ({
     margin: 0,
     position: "absolute",
     bottom: "50px",
-    background: "#ffffff",
+    background: theme.palette.background.paper,
     padding: "2px",
-    border: "1px solid #CCC",
+    border: `1px solid ${theme.palette.divider}`,
     left: 0,
     width: "100%",
     "& li": {
@@ -216,8 +216,9 @@ const useStyles = makeStyles(theme => ({
         textOverflow: "ellipsis",
         overflow: "hidden",
         maxHeight: "32px",
+        color: theme.palette.text.primary,
         "&:hover": {
-          background: "#F1F1F1",
+          background: theme.palette.action.hover,
           cursor: "pointer",
         },
       },
@@ -225,7 +226,7 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const MessageInput = ({ ticketStatus, droppedFiles = [], onDropHandled }) => {
+const MessageInput = ({ ticketStatus, droppedFiles = [], onDropHandled, onOptimisticSend }) => {
   const classes = useStyles();
   const { ticketId } = useParams();
 
@@ -302,11 +303,32 @@ const MessageInput = ({ ticketStatus, droppedFiles = [], onDropHandled }) => {
 
     try {
       if (medias.length > 0) {
+        if (onOptimisticSend) {
+          const pending = medias.map((file, i) => ({
+            id: `pending-${Date.now()}-${i}`,
+            body: i === medias.length - 1 ? inputMessage.trim() : "",
+            fromMe: true,
+            mediaType: file.type.split("/")[0],
+            previewUrl: URL.createObjectURL(file),
+          }));
+          onOptimisticSend(pending);
+        }
+
         const formData = new FormData();
         formData.append("fromMe", true);
         medias.forEach(media => formData.append("medias", media));
         formData.append("body", inputMessage.trim());
-        await api.post(`/messages/${ticketId}`, formData);
+
+        // Clear UI immediately
+        setInputMessage("");
+        setShowEmoji(false);
+        setLoading(false);
+        setMedias([]);
+        setReplyingMessage(null);
+
+        // POST fire-and-forget
+        api.post(`/messages/${ticketId}`, formData).catch(toastError);
+        return;
       } else {
         const body = signMessage
           ? `*${user?.name}:*\n${inputMessage.trim()}`
