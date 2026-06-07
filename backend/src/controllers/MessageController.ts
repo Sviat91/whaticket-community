@@ -57,6 +57,13 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
   return res.send();
 };
 
+export const read = async (req: Request, res: Response): Promise<Response> => {
+  const { ticketId } = req.params;
+  const ticket = await ShowTicketService(ticketId);
+  SetTicketMessagesAsRead(ticket);
+  return res.send();
+};
+
 export const remove = async (
   req: Request,
   res: Response

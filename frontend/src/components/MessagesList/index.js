@@ -367,6 +367,12 @@ const MessagesList = ({ ticketId, isGroup }) => {
       if (data.action === "create") {
         dispatch({ type: "ADD_MESSAGE", payload: data.message });
         scrollToBottom();
+        if (
+          String(data.message.ticketId) === String(ticketId) &&
+          document.visibilityState === "visible"
+        ) {
+          api.put(`/messages/${ticketId}`).catch(() => {});
+        }
       }
 
       if (data.action === "update") {
