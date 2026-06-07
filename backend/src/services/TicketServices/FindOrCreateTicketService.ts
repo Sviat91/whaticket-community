@@ -11,12 +11,12 @@ const FindOrCreateTicketService = async (
   const contactId = groupContact ? groupContact.id : contact.id;
 
   let ticket = await Ticket.findOne({
-    where: { contactId, whatsappId },
+    where: { contactId },
     order: [["updatedAt", "DESC"]]
   });
 
   if (ticket) {
-    await ticket.update({ status: "open", unreadMessages });
+    await ticket.update({ status: "open", unreadMessages, whatsappId });
   } else {
     ticket = await Ticket.create({
       contactId,

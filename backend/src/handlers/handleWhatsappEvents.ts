@@ -283,8 +283,10 @@ export const handleMessage = async (
       lastMessageText = processedMessage.body.includes("Localization")
         ? processedMessage.body
         : "Localization";
+    } else if (mediaPayload && processedMessage.hasMedia && !processedMessage.body) {
+      lastMessageText = "📷 Фото/Медиа";
     } else {
-      lastMessageText = processedMessage.body || mediaPayload?.filename || "";
+      lastMessageText = processedMessage.body || "";
     }
 
     await ticket.update({ lastMessage: lastMessageText });
