@@ -65,6 +65,39 @@ const useStyles = makeStyles(theme => ({
     },
   },
 
+  dragOver: {
+    outline: "2px dashed #25D366",
+    background: "rgba(37, 211, 102, 0.06)",
+  },
+
+  mediaPreview: {
+    display: "flex",
+    alignItems: "center",
+    padding: "6px 10px",
+    width: "100%",
+    background: "#f0f0f0",
+    borderTop: "1px solid rgba(0,0,0,0.08)",
+    gap: 8,
+    boxSizing: "border-box",
+  },
+
+  mediaThumb: {
+    width: 48,
+    height: 48,
+    objectFit: "cover",
+    borderRadius: 6,
+    flexShrink: 0,
+  },
+
+  mediaFileName: {
+    flex: 1,
+    fontSize: 13,
+    color: "#444",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
+
   newMessageBox: {
     background: "#eee",
     width: "100%",
@@ -97,15 +130,6 @@ const useStyles = makeStyles(theme => ({
     display: "none",
   },
 
-  viewMediaInputWrapper: {
-    display: "flex",
-    padding: "10px 13px",
-    position: "relative",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#eee",
-    borderTop: "1px solid rgba(0, 0, 0, 0.12)",
-  },
 
   emojiBox: {
     position: "absolute",
@@ -222,6 +246,7 @@ const MessageInput = ({ ticketStatus }) => {
   const [showEmoji, setShowEmoji] = useState(false);
   const [loading, setLoading] = useState(false);
   const [recording, setRecording] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [quickAnswers, setQuickAnswer] = useState([]);
   const [typeBar, setTypeBar] = useState(false);
   const inputRef = useRef();
@@ -276,42 +301,34 @@ const MessageInput = ({ ticketStatus }) => {
     }
   };
 
-  const handleUploadMedia = async e => {
-    setLoading(true);
+  const handleDrop = e => {
     e.preventDefault();
-
-    const formData = new FormData();
-    formData.append("fromMe", true);
-    medias.forEach(media => {
-      formData.append("medias", media);
-      formData.append("body", media.name);
-    });
-
-    try {
-      await api.post(`/messages/${ticketId}`, formData);
-    } catch (err) {
-      toastError(err);
+    setIsDragging(false);
+    if (e.dataTransfer.files.length > 0) {
+      setMedias(Array.from(e.dataTransfer.files));
     }
-
-    setLoading(false);
-    setMedias([]);
   };
 
   const handleSendMessage = async () => {
-    if (inputMessage.trim() === "") return;
+    if (inputMessage.trim() === "" && medias.length === 0) return;
     setLoading(true);
 
-    const message = {
-      read: 1,
-      fromMe: true,
-      mediaUrl: "",
-      body: signMessage
-        ? `*${user?.name}:*\n${inputMessage.trim()}`
-        : inputMessage.trim(),
-      quotedMsg: replyingMessage,
-    };
     try {
-      await api.post(`/messages/${ticketId}`, message);
+      if (medias.length > 0) {
+        const formData = new FormData();
+        formData.append("fromMe", true);
+        medias.forEach(media => formData.append("medias", media));
+        const caption = inputMessage.trim();
+        formData.append("body", caption || medias[0].name);
+        await api.post(`/messages/${ticketId}`, formData);
+      } else {
+        const body = signMessage
+          ? `*${user?.name}:*\n${inputMessage.trim()}`
+          : inputMessage.trim();
+        await api.post(`/messages/${ticketId}`, {
+          read: 1, fromMe: true, mediaUrl: "", body, quotedMsg: replyingMessage,
+        });
+      }
     } catch (err) {
       toastError(err);
     }
@@ -319,6 +336,7 @@ const MessageInput = ({ ticketStatus }) => {
     setInputMessage("");
     setShowEmoji(false);
     setLoading(false);
+    setMedias([]);
     setReplyingMessage(null);
   };
 
@@ -438,41 +456,33 @@ const MessageInput = ({ ticketStatus }) => {
     );
   };
 
-  if (medias.length > 0)
-    return (
-      <Paper elevation={0} square className={classes.viewMediaInputWrapper}>
-        <IconButton
-          aria-label="cancel-upload"
-          component="span"
-          onClick={e => setMedias([])}
-        >
-          <CancelIcon className={classes.sendMessageIcons} />
-        </IconButton>
-
-        {loading ? (
-          <div>
-            <CircularProgress className={classes.circleLoading} />
-          </div>
-        ) : (
-          <span>
-            {medias[0]?.name}
-            {/* <img src={media.preview} alt=""></img> */}
-          </span>
-        )}
-        <IconButton
-          aria-label="send-upload"
-          component="span"
-          onClick={handleUploadMedia}
-          disabled={loading}
-        >
-          <SendIcon className={classes.sendMessageIcons} />
-        </IconButton>
-      </Paper>
-    );
-  else {
-    return (
-      <Paper square elevation={0} className={classes.mainWrapper}>
+  return (
+      <Paper
+        square
+        elevation={0}
+        className={clsx(classes.mainWrapper, { [classes.dragOver]: isDragging })}
+        onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
+        onDragLeave={() => setIsDragging(false)}
+        onDrop={handleDrop}
+      >
         {replyingMessage && renderReplyingMessage(replyingMessage)}
+        {medias.length > 0 && (
+          <div className={classes.mediaPreview}>
+            {medias[0].type.startsWith("image/") ? (
+              <img
+                className={classes.mediaThumb}
+                src={URL.createObjectURL(medias[0])}
+                alt="preview"
+              />
+            ) : (
+              <AttachFileIcon style={{ fontSize: 36, color: "#555", flexShrink: 0 }} />
+            )}
+            <span className={classes.mediaFileName}>{medias[0].name}</span>
+            <IconButton size="small" onClick={() => setMedias([])}>
+              <CancelIcon style={{ fontSize: 18 }} />
+            </IconButton>
+          </div>
+        )}
         <div className={classes.newMessageBox}>
           <Hidden only={["sm", "xs"]}>
             <IconButton
@@ -641,7 +651,7 @@ const MessageInput = ({ ticketStatus }) => {
               <div></div>
             )}
           </div>
-          {inputMessage ? (
+          {(inputMessage || medias.length > 0) ? (
             <IconButton
               aria-label="sendMessage"
               component="span"
@@ -691,7 +701,6 @@ const MessageInput = ({ ticketStatus }) => {
         </div>
       </Paper>
     );
-  }
 };
 
 export default MessageInput;
