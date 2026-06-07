@@ -88,7 +88,7 @@ const MainListItems = (props) => {
       />
       <ListItemLink
         to="/tickets"
-        primary={i18n.t("mainDrawer.listItems.tickets")}
+        primary="Chats"
         icon={<WhatsAppIcon />}
       />
 
