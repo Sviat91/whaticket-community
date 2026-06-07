@@ -292,21 +292,6 @@ export const handleMessage = async (
     await CreateMessageService({ messageData });
 
     await processVcardMessage(processedMessage);
-
-    if (
-      !ticket.queue &&
-      !contextPayload.groupContact &&
-      !processedMessage.fromMe &&
-      !ticket.userId &&
-      whatsapp.queues.length >= 1
-    ) {
-      await handleQueueLogic(
-        contextPayload.whatsappId,
-        processedMessage.body,
-        ticket,
-        contactPayload
-      );
-    }
   } catch (err) {
     Sentry.captureException(err);
     logger.error({
