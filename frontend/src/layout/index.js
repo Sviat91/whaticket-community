@@ -223,11 +223,11 @@ const LoggedInLayout = ({ children }) => {
             AVS-Chats
           </Typography>
 
-          <IconButton onClick={toggleTheme} size="small" style={{ padding: 6 }}>
+          <IconButton onClick={toggleTheme} style={{ padding: 4, background: "none", border: "none", boxShadow: "none" }}>
             <img
               src={darkMode ? "/Dark.png" : "/Light.png"}
               alt="toggle theme"
-              style={{ width: 32, height: 32, objectFit: "contain" }}
+              style={{ width: 96, height: 64, objectFit: "contain" }}
             />
           </IconButton>
 
