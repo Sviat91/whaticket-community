@@ -223,13 +223,12 @@ const LoggedInLayout = ({ children }) => {
             AVS-Chats
           </Typography>
 
-          <IconButton onClick={toggleTheme} style={{ padding: 4, background: "none", border: "none", boxShadow: "none" }}>
-            <img
-              src={darkMode ? "/Dark.png" : "/Light.png"}
-              alt="toggle theme"
-              style={{ width: 96, height: 64, objectFit: "contain" }}
-            />
-          </IconButton>
+          <img
+            src={darkMode ? "/Dark.png" : "/Light.png"}
+            alt="toggle theme"
+            onClick={toggleTheme}
+            style={{ width: 56, height: 36, objectFit: "contain", cursor: "pointer" }}
+          />
 
           {user.id && (
             <NotificationsPopOver className={classes.iconButton} />
