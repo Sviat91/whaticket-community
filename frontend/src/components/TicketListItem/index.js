@@ -4,14 +4,12 @@ import { useHistory, useParams } from "react-router-dom";
 import { parseISO, format, isSameDay } from "date-fns";
 
 import { makeStyles } from "@material-ui/core/styles";
-import { green } from "@material-ui/core/colors";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemText from "@material-ui/core/ListItemText";
 import ListItemAvatar from "@material-ui/core/ListItemAvatar";
 import Typography from "@material-ui/core/Typography";
 import Avatar from "@material-ui/core/Avatar";
 import Divider from "@material-ui/core/Divider";
-import Badge from "@material-ui/core/Badge";
 
 import MarkdownWrapper from "../MarkdownWrapper";
 
@@ -52,21 +50,30 @@ const useStyles = makeStyles(theme => ({
 
 	lastMessageTime: {
 		justifySelf: "flex-end",
+		flexShrink: 0,
 	},
 
 	contactLastMessage: {
-		paddingRight: 20,
+		paddingRight: 8,
+		flex: 1,
+		minWidth: 0,
 	},
 
-	newMessagesCount: {
+	unreadBadge: {
 		alignSelf: "center",
-		marginRight: 8,
 		marginLeft: "auto",
-	},
-
-	badgeStyle: {
+		flexShrink: 0,
+		backgroundColor: "#25D366",
 		color: "white",
-		backgroundColor: green[500],
+		borderRadius: 10,
+		minWidth: 20,
+		height: 20,
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		fontSize: 11,
+		fontWeight: "bold",
+		padding: "0 4px",
 	},
 }));
 
@@ -141,14 +148,9 @@ const TicketListItem = ({ ticket }) => {
 									<br />
 								)}
 							</Typography>
-
-							<Badge
-								className={classes.newMessagesCount}
-								badgeContent={ticket.unreadMessages}
-								classes={{
-									badge: classes.badgeStyle,
-								}}
-							/>
+							{ticket.unreadMessages > 0 && (
+								<span className={classes.unreadBadge}>{ticket.unreadMessages}</span>
+							)}
 						</span>
 					}
 				/>

@@ -20,6 +20,7 @@ import { i18n } from "../translate/i18n";
 import { WhatsAppsContext } from "../context/WhatsApp/WhatsAppsContext";
 import { AuthContext } from "../context/Auth/AuthContext";
 import { Can } from "../components/Can";
+import useTickets from "../hooks/useTickets";
 
 function ListItemLink(props) {
   const { icon, primary, to, className } = props;
@@ -47,6 +48,12 @@ const MainListItems = (props) => {
   const { whatsApps } = useContext(WhatsAppsContext);
   const { user } = useContext(AuthContext);
   const [connectionWarning, setConnectionWarning] = useState(false);
+  const { tickets: unreadTickets } = useTickets({ withUnreadMessages: "true" });
+  const unreadCount = unreadTickets.length;
+
+  useEffect(() => {
+    document.title = unreadCount > 0 ? `(${unreadCount}) Whaticket` : "Whaticket";
+  }, [unreadCount]);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -89,7 +96,11 @@ const MainListItems = (props) => {
       <ListItemLink
         to="/tickets"
         primary="Chats"
-        icon={<WhatsAppIcon />}
+        icon={
+          <Badge badgeContent={unreadCount} color="secondary">
+            <WhatsAppIcon />
+          </Badge>
+        }
       />
 
       <ListItemLink
