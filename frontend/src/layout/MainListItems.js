@@ -20,7 +20,8 @@ import { i18n } from "../translate/i18n";
 import { WhatsAppsContext } from "../context/WhatsApp/WhatsAppsContext";
 import { AuthContext } from "../context/Auth/AuthContext";
 import { Can } from "../components/Can";
-import useTickets from "../hooks/useTickets";
+import openSocket from "../services/socket-io";
+import api from "../services/api";
 
 function ListItemLink(props) {
   const { icon, primary, to, className } = props;
@@ -48,12 +49,35 @@ const MainListItems = (props) => {
   const { whatsApps } = useContext(WhatsAppsContext);
   const { user } = useContext(AuthContext);
   const [connectionWarning, setConnectionWarning] = useState(false);
-  const { tickets: unreadTickets } = useTickets({ withUnreadMessages: "true" });
-  const unreadCount = unreadTickets.length;
+  const [unreadTicketIds, setUnreadTicketIds] = useState(new Set());
+  const unreadCount = unreadTicketIds.size;
 
   useEffect(() => {
-    document.title = unreadCount > 0 ? `(${unreadCount}) Whaticket` : "Whaticket";
-  }, [unreadCount]);
+    api.get("/tickets", { params: { withUnreadMessages: "true" } })
+      .then(({ data }) => setUnreadTicketIds(new Set(data.tickets.map(t => t.id))))
+      .catch(() => {});
+
+    const socket = openSocket();
+    socket.on("connect", () => socket.emit("joinNotification"));
+
+    socket.on("appMessage", data => {
+      if (data.action === "create" && !data.message.read) {
+        setUnreadTicketIds(prev => new Set([...prev, data.ticket.id]));
+      }
+    });
+
+    socket.on("ticket", data => {
+      if (data.action === "updateUnread" || data.action === "delete") {
+        setUnreadTicketIds(prev => {
+          const next = new Set(prev);
+          next.delete(data.ticketId);
+          return next;
+        });
+      }
+    });
+
+    return () => socket.disconnect();
+  }, []);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
