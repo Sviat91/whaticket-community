@@ -12,5 +12,6 @@ export default {
 
       return cb(null, fileName);
     }
-  })
+  }),
+  limits: { fileSize: 20 * 1024 * 1024 }
 };
