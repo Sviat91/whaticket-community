@@ -82,6 +82,8 @@ const Ticket = () => {
   const [loading, setLoading] = useState(true);
   const [contact, setContact] = useState({});
   const [ticket, setTicket] = useState({});
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [droppedFiles, setDroppedFiles] = useState([]);
 
   useEffect(() => {
     setLoading(true);
@@ -143,8 +145,41 @@ const Ticket = () => {
     setDrawerOpen(false);
   };
 
+  const handleDragOver = e => {
+    e.preventDefault();
+    setIsDraggingOver(true);
+  };
+
+  const handleDragLeave = e => {
+    if (!e.currentTarget.contains(e.relatedTarget)) setIsDraggingOver(false);
+  };
+
+  const handleDrop = e => {
+    e.preventDefault();
+    setIsDraggingOver(false);
+    if (e.dataTransfer.files.length > 0)
+      setDroppedFiles(Array.from(e.dataTransfer.files));
+  };
+
   return (
-    <div className={classes.root} id="drawer-container">
+    <div
+      className={classes.root}
+      id="drawer-container"
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {isDraggingOver && (
+        <div style={{
+          position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: "rgba(0,0,0,0.5)", zIndex: 9999,
+          display: "flex", justifyContent: "center", alignItems: "center",
+          color: "#fff", fontSize: "2rem", fontWeight: "bold",
+          pointerEvents: "none",
+        }}>
+          Drop files here
+        </div>
+      )}
       <Paper
         variant="outlined"
         elevation={0}
@@ -169,7 +204,11 @@ const Ticket = () => {
             ticketId={ticketId}
             isGroup={ticket.isGroup}
           ></MessagesList>
-          <MessageInput ticketStatus={ticket.status} />
+          <MessageInput
+            ticketStatus={ticket.status}
+            droppedFiles={droppedFiles}
+            onDropHandled={() => setDroppedFiles([])}
+          />
         </ReplyMessageProvider>
       </Paper>
       <ContactDrawer

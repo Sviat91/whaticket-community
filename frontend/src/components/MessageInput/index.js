@@ -65,15 +65,11 @@ const useStyles = makeStyles(theme => ({
     },
   },
 
-  dragOver: {
-    outline: "2px dashed #25D366",
-    background: "rgba(37, 211, 102, 0.06)",
-  },
-
   mediaPreview: {
     display: "flex",
+    flexWrap: "wrap",
     alignItems: "center",
-    padding: "6px 10px",
+    padding: "8px 10px",
     width: "100%",
     background: "#f0f0f0",
     borderTop: "1px solid rgba(0,0,0,0.08)",
@@ -89,14 +85,6 @@ const useStyles = makeStyles(theme => ({
     flexShrink: 0,
   },
 
-  mediaFileName: {
-    flex: 1,
-    fontSize: 13,
-    color: "#444",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-  },
 
   newMessageBox: {
     background: "#eee",
@@ -237,7 +225,7 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const MessageInput = ({ ticketStatus }) => {
+const MessageInput = ({ ticketStatus, droppedFiles = [], onDropHandled }) => {
   const classes = useStyles();
   const { ticketId } = useParams();
 
@@ -246,7 +234,6 @@ const MessageInput = ({ ticketStatus }) => {
   const [showEmoji, setShowEmoji] = useState(false);
   const [loading, setLoading] = useState(false);
   const [recording, setRecording] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
   const [quickAnswers, setQuickAnswer] = useState([]);
   const [typeBar, setTypeBar] = useState(false);
   const inputRef = useRef();
@@ -301,13 +288,13 @@ const MessageInput = ({ ticketStatus }) => {
     }
   };
 
-  const handleDrop = e => {
-    e.preventDefault();
-    setIsDragging(false);
-    if (e.dataTransfer.files.length > 0) {
-      setMedias(Array.from(e.dataTransfer.files));
+  useEffect(() => {
+    if (droppedFiles.length > 0) {
+      setMedias(prev => [...prev, ...droppedFiles]);
+      onDropHandled();
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [droppedFiles]);
 
   const handleSendMessage = async () => {
     if (inputMessage.trim() === "" && medias.length === 0) return;
@@ -318,8 +305,7 @@ const MessageInput = ({ ticketStatus }) => {
         const formData = new FormData();
         formData.append("fromMe", true);
         medias.forEach(media => formData.append("medias", media));
-        const caption = inputMessage.trim();
-        formData.append("body", caption || medias[0].name);
+        formData.append("body", inputMessage.trim() || medias.map(m => m.name).join(", "));
         await api.post(`/messages/${ticketId}`, formData);
       } else {
         const body = signMessage
@@ -460,27 +446,33 @@ const MessageInput = ({ ticketStatus }) => {
       <Paper
         square
         elevation={0}
-        className={clsx(classes.mainWrapper, { [classes.dragOver]: isDragging })}
-        onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
-        onDragLeave={() => setIsDragging(false)}
-        onDrop={handleDrop}
+        className={classes.mainWrapper}
       >
         {replyingMessage && renderReplyingMessage(replyingMessage)}
         {medias.length > 0 && (
           <div className={classes.mediaPreview}>
-            {medias[0].type.startsWith("image/") ? (
-              <img
-                className={classes.mediaThumb}
-                src={URL.createObjectURL(medias[0])}
-                alt="preview"
-              />
-            ) : (
-              <AttachFileIcon style={{ fontSize: 36, color: "#555", flexShrink: 0 }} />
-            )}
-            <span className={classes.mediaFileName}>{medias[0].name}</span>
-            <IconButton size="small" onClick={() => setMedias([])}>
-              <CancelIcon style={{ fontSize: 18 }} />
-            </IconButton>
+            {medias.map((file, idx) => (
+              <div key={idx} style={{ position: "relative", flexShrink: 0 }}>
+                {file.type.startsWith("image/") ? (
+                  <img
+                    className={classes.mediaThumb}
+                    src={URL.createObjectURL(file)}
+                    alt={file.name}
+                  />
+                ) : (
+                  <div className={classes.mediaThumb} style={{ background: "#ddd", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <AttachFileIcon style={{ fontSize: 28, color: "#555" }} />
+                  </div>
+                )}
+                <IconButton
+                  size="small"
+                  onClick={() => setMedias(prev => prev.filter((_, i) => i !== idx))}
+                  style={{ position: "absolute", top: -6, right: -6, background: "white", padding: 2 }}
+                >
+                  <CancelIcon style={{ fontSize: 14 }} />
+                </IconButton>
+              </div>
+            ))}
           </div>
         )}
         <div className={classes.newMessageBox}>
