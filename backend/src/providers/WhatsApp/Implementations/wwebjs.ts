@@ -101,7 +101,12 @@ const getSerializedMessageId = (
 const convertToContactPayload = async (
   msgContact: WbotContact
 ): Promise<ContactPayload> => {
-  const profilePicUrl = await msgContact.getProfilePicUrl();
+  let profilePicUrl: string | undefined;
+  try {
+    profilePicUrl = await msgContact.getProfilePicUrl();
+  } catch (err) {
+    logger.warn(`Could not get profile pic for ${msgContact.id.user}: ${err}`);
+  }
 
   return {
     name: msgContact.name || msgContact.pushname || msgContact.id.user,
