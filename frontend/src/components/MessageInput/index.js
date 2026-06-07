@@ -305,7 +305,7 @@ const MessageInput = ({ ticketStatus, droppedFiles = [], onDropHandled }) => {
         const formData = new FormData();
         formData.append("fromMe", true);
         medias.forEach(media => formData.append("medias", media));
-        formData.append("body", inputMessage.trim() || medias.map(m => m.name).join(", "));
+        formData.append("body", inputMessage.trim());
         await api.post(`/messages/${ticketId}`, formData);
       } else {
         const body = signMessage
