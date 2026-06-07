@@ -151,9 +151,6 @@ const TicketListItem = ({ ticket }) => {
 							{ticket.unreadMessages > 0 && (
 								<span className={classes.unreadBadge}>{ticket.unreadMessages}</span>
 							)}
-							<span style={{ fontSize: 9, color: "red", marginLeft: 2 }}>
-								{ticket.unreadMessages}
-							</span>
 						</span>
 					}
 				/>
