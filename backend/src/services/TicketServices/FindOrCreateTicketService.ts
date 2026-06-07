@@ -5,7 +5,7 @@ import ShowTicketService from "./ShowTicketService";
 const FindOrCreateTicketService = async (
   contact: Contact,
   whatsappId: number,
-  unreadMessages: number,
+  fromMe: boolean,
   groupContact?: Contact
 ): Promise<Ticket> => {
   const contactId = groupContact ? groupContact.id : contact.id;
@@ -16,13 +16,14 @@ const FindOrCreateTicketService = async (
   });
 
   if (ticket) {
-    await ticket.update({ status: "open", unreadMessages, whatsappId });
+    const newUnread = fromMe ? 0 : ticket.unreadMessages + 1;
+    await ticket.update({ status: "open", unreadMessages: newUnread, whatsappId });
   } else {
     ticket = await Ticket.create({
       contactId,
       status: "open",
       isGroup: !!groupContact,
-      unreadMessages,
+      unreadMessages: fromMe ? 0 : 1,
       whatsappId
     });
   }

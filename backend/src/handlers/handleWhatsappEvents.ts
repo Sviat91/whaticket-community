@@ -254,7 +254,7 @@ export const handleMessage = async (
     const ticket = await FindOrCreateTicketService(
       contact,
       contextPayload.whatsappId,
-      contextPayload.unreadMessages,
+      processedMessage.fromMe,
       groupContact
     );
 
@@ -284,7 +284,7 @@ export const handleMessage = async (
         ? processedMessage.body
         : "Localization";
     } else if (mediaPayload && processedMessage.hasMedia && !processedMessage.body) {
-      lastMessageText = "📷 Фото/Медиа";
+      lastMessageText = "📷 Photo/Media";
     } else {
       lastMessageText = processedMessage.body || "";
     }

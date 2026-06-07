@@ -53,6 +53,7 @@ const CreateOrUpdateContactService = async ({
     await contactByLid.destroy();
 
     await contactByNumber.update({
+      name: name || contactByNumber.name,
       lid: contactByLid.lid,
       profilePicUrl
     });
@@ -70,6 +71,7 @@ const CreateOrUpdateContactService = async ({
 
   if (contactByNumber) {
     await contactByNumber.update({
+      name: name || contactByNumber.name,
       lid: lid || contactByNumber.lid,
       profilePicUrl
     });
@@ -81,6 +83,7 @@ const CreateOrUpdateContactService = async ({
 
   if (contactByLid) {
     await contactByLid.update({
+      name: name || contactByLid.name,
       number: number || contactByLid.number,
       profilePicUrl
     });
