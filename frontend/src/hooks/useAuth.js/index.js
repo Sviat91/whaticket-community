@@ -10,6 +10,7 @@ import toastError from "../../errors/toastError";
 
 let isRefreshing = false;
 let failedQueue = [];
+let interceptorsRegistered = false;
 
 const processQueue = (error, token = null) => {
 	failedQueue.forEach(prom => {
@@ -25,8 +26,12 @@ const useAuth = () => {
 	const [loading, setLoading] = useState(true);
 	const [user, setUser] = useState({});
 
-	useEffect(() => {
-		const reqId = api.interceptors.request.use(
+	// Register interceptors synchronously so they're active before any request fires.
+	// Module-level flag prevents accumulation across re-renders.
+	if (!interceptorsRegistered) {
+		interceptorsRegistered = true;
+
+		api.interceptors.request.use(
 			config => {
 				const token = localStorage.getItem("token");
 				if (token) {
@@ -38,7 +43,7 @@ const useAuth = () => {
 			error => Promise.reject(error)
 		);
 
-		const resId = api.interceptors.response.use(
+		api.interceptors.response.use(
 			response => response,
 			async error => {
 				const originalRequest = error.config;
@@ -88,12 +93,7 @@ const useAuth = () => {
 				return Promise.reject(error);
 			}
 		);
-
-		return () => {
-			api.interceptors.request.eject(reqId);
-			api.interceptors.response.eject(resId);
-		};
-	}, []); // eslint-disable-line react-hooks/exhaustive-deps
+	}
 
 	useEffect(() => {
 		const token = localStorage.getItem("token");
