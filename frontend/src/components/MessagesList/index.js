@@ -354,13 +354,12 @@ const MessagesList = ({ ticketId, isGroup, pendingMessages = [], onFromMeMessage
           });
 
           if (currentTicketId.current === ticketId) {
+            if (pageNumber === 1 && data.messages.length > 1) {
+              pendingScrollRef.current = true;
+            }
             dispatch({ type: "LOAD_MESSAGES", payload: data.messages });
             setHasMore(data.hasMore);
             setLoading(false);
-          }
-
-          if (pageNumber === 1 && data.messages.length > 1) {
-            pendingScrollRef.current = true;
           }
         } catch (err) {
           setLoading(false);
