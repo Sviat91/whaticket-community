@@ -57,6 +57,7 @@ const useStyles = makeStyles((theme) => ({
     marginTop: 2,
     minWidth: 100,
     maxWidth: 600,
+    width: "fit-content",
     height: "auto",
     display: "block",
     position: "relative",
@@ -111,6 +112,7 @@ const useStyles = makeStyles((theme) => ({
     marginTop: 2,
     minWidth: 100,
     maxWidth: 600,
+    width: "fit-content",
     height: "auto",
     display: "block",
     position: "relative",
@@ -333,11 +335,12 @@ const MessagesList = ({ ticketId, isGroup, pendingMessages = [], onFromMeMessage
   const [anchorEl, setAnchorEl] = useState(null);
   const messageOptionsMenuOpen = Boolean(anchorEl);
   const currentTicketId = useRef(ticketId);
+  const pendingScrollRef = useRef(false);
 
   useEffect(() => {
     dispatch({ type: "RESET" });
     setPageNumber(1);
-
+    pendingScrollRef.current = false;
     currentTicketId.current = ticketId;
   }, [ticketId]);
 
@@ -357,7 +360,7 @@ const MessagesList = ({ ticketId, isGroup, pendingMessages = [], onFromMeMessage
           }
 
           if (pageNumber === 1 && data.messages.length > 1) {
-            scrollToBottom();
+            pendingScrollRef.current = true;
           }
         } catch (err) {
           setLoading(false);
@@ -411,6 +414,14 @@ const MessagesList = ({ ticketId, isGroup, pendingMessages = [], onFromMeMessage
       lastMessageRef.current.scrollIntoView({});
     }
   };
+
+  useEffect(() => {
+    if (pendingScrollRef.current && messagesList.length > 0) {
+      pendingScrollRef.current = false;
+      scrollToBottom();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messagesList]);
 
   const handleScroll = (e) => {
     if (!hasMore) return;
@@ -716,33 +727,33 @@ const MessagesList = ({ ticketId, isGroup, pendingMessages = [], onFromMeMessage
             </div>
           </div>
         ))}
+        {loading && (
+          <div style={{ padding: "0 0 12px 0" }}>
+            {[
+              { fromMe: false, w: 180 },
+              { fromMe: true,  w: 240 },
+              { fromMe: false, w: 130 },
+              { fromMe: true,  w: 200 },
+              { fromMe: false, w: 160 },
+              { fromMe: true,  w: 110 },
+            ].map((item, i) => (
+              <div key={i} style={{
+                display: "flex",
+                justifyContent: item.fromMe ? "flex-end" : "flex-start",
+                marginBottom: 6,
+              }}>
+                <Skeleton
+                  variant="rect"
+                  width={item.w}
+                  height={36}
+                  style={{ borderRadius: item.fromMe ? "8px 8px 0 8px" : "0 8px 8px 8px" }}
+                />
+              </div>
+            ))}
+          </div>
+        )}
         <div ref={lastMessageRef} style={{ float: "left", clear: "both" }} />
       </div>
-      {loading && (
-        <div style={{ padding: "20px 20px 0 20px" }}>
-          {[
-            { fromMe: false, w: 180 },
-            { fromMe: true,  w: 240 },
-            { fromMe: false, w: 130 },
-            { fromMe: true,  w: 200 },
-            { fromMe: false, w: 160 },
-            { fromMe: true,  w: 110 },
-          ].map((item, i) => (
-            <div key={i} style={{
-              display: "flex",
-              justifyContent: item.fromMe ? "flex-end" : "flex-start",
-              marginBottom: 6,
-            }}>
-              <Skeleton
-                variant="rect"
-                width={item.w}
-                height={36}
-                style={{ borderRadius: item.fromMe ? "8px 8px 0 8px" : "0 8px 8px 8px" }}
-              />
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 };

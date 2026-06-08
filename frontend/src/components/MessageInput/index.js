@@ -481,7 +481,7 @@ const MessageInput = ({ ticketStatus, droppedFiles = [], onDropHandled, onOptimi
                 <IconButton
                   size="small"
                   onClick={() => setMedias(prev => prev.filter((_, i) => i !== idx))}
-                  style={{ position: "absolute", top: -6, right: -6, background: "white", padding: 2 }}
+                  style={{ position: "absolute", top: -6, right: -6, background: "rgba(0,0,0,0.55)", padding: 2 }}
                 >
                   <X size={14} />
                 </IconButton>
