@@ -440,7 +440,17 @@ const deleteMessage = async (
 
   const serializedMsgId = getSerializedMessageId(chatId, fromMe, messageId);
 
-  const message = await wbot.getMessageById(serializedMsgId);
+  let message = await wbot.getMessageById(serializedMsgId);
+
+  if (!message) {
+    const chat = await wbot.getChatById(chatId);
+    const msgs = await chat.fetchMessages({ limit: 50 });
+    message = msgs.find(m => m.id.id === messageId) ?? null;
+  }
+
+  if (!message) {
+    throw new AppError("ERR_DELETE_WAPP_MSG");
+  }
 
   await message.delete(true);
 };
