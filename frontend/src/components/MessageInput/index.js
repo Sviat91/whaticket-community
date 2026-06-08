@@ -9,16 +9,8 @@ import Paper from "@material-ui/core/Paper";
 import InputBase from "@material-ui/core/InputBase";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import { green } from "@material-ui/core/colors";
-import AttachFileIcon from "@material-ui/icons/AttachFile";
 import IconButton from "@material-ui/core/IconButton";
-import MoreVert from "@material-ui/icons/MoreVert";
-import MoodIcon from "@material-ui/icons/Mood";
-import SendIcon from "@material-ui/icons/Send";
-import CancelIcon from "@material-ui/icons/Cancel";
-import ClearIcon from "@material-ui/icons/Clear";
-import MicIcon from "@material-ui/icons/Mic";
-import CheckCircleOutlineIcon from "@material-ui/icons/CheckCircleOutline";
-import HighlightOffIcon from "@material-ui/icons/HighlightOff";
+import { Paperclip, MoreVertical, Smile, Send, XCircle, X, Mic, CheckCircle } from "lucide-react";
 import {
   FormControlLabel,
   Hidden,
@@ -458,7 +450,7 @@ const MessageInput = ({ ticketStatus, droppedFiles = [], onDropHandled, onOptimi
           disabled={loading || ticketStatus !== "open"}
           onClick={() => setReplyingMessage(null)}
         >
-          <ClearIcon className={classes.sendMessageIcons} />
+          <X size={20} />
         </IconButton>
       </div>
     );
@@ -483,7 +475,7 @@ const MessageInput = ({ ticketStatus, droppedFiles = [], onDropHandled, onOptimi
                   />
                 ) : (
                   <div className={classes.mediaThumb} style={{ background: "#ddd", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <AttachFileIcon style={{ fontSize: 28, color: "#555" }} />
+                    <Paperclip size={20} style={{ color: "#555" }} />
                   </div>
                 )}
                 <IconButton
@@ -491,7 +483,7 @@ const MessageInput = ({ ticketStatus, droppedFiles = [], onDropHandled, onOptimi
                   onClick={() => setMedias(prev => prev.filter((_, i) => i !== idx))}
                   style={{ position: "absolute", top: -6, right: -6, background: "white", padding: 2 }}
                 >
-                  <CancelIcon style={{ fontSize: 14 }} />
+                  <X size={14} />
                 </IconButton>
               </div>
             ))}
@@ -505,7 +497,7 @@ const MessageInput = ({ ticketStatus, droppedFiles = [], onDropHandled, onOptimi
               disabled={loading || recording || ticketStatus !== "open"}
               onClick={e => setShowEmoji(prevState => !prevState)}
             >
-              <MoodIcon className={classes.sendMessageIcons} />
+              <Smile size={20} />
             </IconButton>
             {showEmoji ? (
               <div className={classes.emojiBox}>
@@ -534,7 +526,7 @@ const MessageInput = ({ ticketStatus, droppedFiles = [], onDropHandled, onOptimi
                 component="span"
                 disabled={loading || recording || ticketStatus !== "open"}
               >
-                <AttachFileIcon className={classes.sendMessageIcons} />
+                <Paperclip size={20} />
               </IconButton>
             </label>
           </Hidden>
@@ -544,7 +536,7 @@ const MessageInput = ({ ticketStatus, droppedFiles = [], onDropHandled, onOptimi
               aria-haspopup="true"
               onClick={handleOpenMenuClick}
             >
-              <MoreVert></MoreVert>
+              <MoreVertical size={20} />
             </IconButton>
             <Menu
               id="simple-menu"
@@ -560,7 +552,7 @@ const MessageInput = ({ ticketStatus, droppedFiles = [], onDropHandled, onOptimi
                   disabled={loading || recording || ticketStatus !== "open"}
                   onClick={e => setShowEmoji(prevState => !prevState)}
                 >
-                  <MoodIcon className={classes.sendMessageIcons} />
+                  <Smile size={20} />
                 </IconButton>
               </MenuItem>
               <MenuItem onClick={handleMenuItemClick}>
@@ -578,7 +570,7 @@ const MessageInput = ({ ticketStatus, droppedFiles = [], onDropHandled, onOptimi
                     component="span"
                     disabled={loading || recording || ticketStatus !== "open"}
                   >
-                    <AttachFileIcon className={classes.sendMessageIcons} />
+                    <Paperclip size={20} />
                   </IconButton>
                 </label>
               </MenuItem>
@@ -652,7 +644,7 @@ const MessageInput = ({ ticketStatus, droppedFiles = [], onDropHandled, onOptimi
               onClick={handleSendMessage}
               disabled={loading}
             >
-              <SendIcon className={classes.sendMessageIcons} />
+              <Send size={20} />
             </IconButton>
           ) : recording ? (
             <div className={classes.recorderWrapper}>
@@ -663,7 +655,7 @@ const MessageInput = ({ ticketStatus, droppedFiles = [], onDropHandled, onOptimi
                 disabled={loading}
                 onClick={handleCancelAudio}
               >
-                <HighlightOffIcon className={classes.cancelAudioIcon} />
+                <XCircle size={20} style={{ color: "red" }} />
               </IconButton>
               {loading ? (
                 <div>
@@ -679,7 +671,7 @@ const MessageInput = ({ ticketStatus, droppedFiles = [], onDropHandled, onOptimi
                 onClick={handleUploadAudio}
                 disabled={loading}
               >
-                <CheckCircleOutlineIcon className={classes.sendAudioIcon} />
+                <CheckCircle size={20} style={{ color: "green" }} />
               </IconButton>
             </div>
           ) : (
@@ -689,7 +681,7 @@ const MessageInput = ({ ticketStatus, droppedFiles = [], onDropHandled, onOptimi
               disabled={loading || ticketStatus !== "open"}
               onClick={handleStartRecording}
             >
-              <MicIcon className={classes.sendMessageIcons} />
+              <Mic size={20} />
             </IconButton>
           )}
         </div>

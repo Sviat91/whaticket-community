@@ -6,10 +6,10 @@ import clsx from "clsx";
 
 import { green } from "@material-ui/core/colors";
 import {
-  CircularProgress,
   IconButton,
   makeStyles,
 } from "@material-ui/core";
+import Skeleton from "@material-ui/lab/Skeleton";
 import {
   AccessTime,
   Block,
@@ -50,15 +50,6 @@ const useStyles = makeStyles((theme) => ({
       paddingBottom: "90px",
     },
     ...theme.scrollbarStyles,
-  },
-
-  circleLoading: {
-    color: green[500],
-    position: "absolute",
-    opacity: "70%",
-    top: 0,
-    left: "50%",
-    marginTop: 12,
   },
 
   messageLeft: {
@@ -196,13 +187,13 @@ const useStyles = makeStyles((theme) => ({
   },
 
   messageMedia: {
-    objectFit: "cover",
+    objectFit: "contain",
     width: 250,
-    height: 200,
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 8,
-    borderBottomLeftRadius: 8,
-    borderBottomRightRadius: 8,
+    height: "auto",
+    maxHeight: 350,
+    borderRadius: 8,
+    display: "block",
+    backgroundColor: "transparent",
   },
 
   timestamp: {
@@ -728,8 +719,28 @@ const MessagesList = ({ ticketId, isGroup, pendingMessages = [], onFromMeMessage
         <div ref={lastMessageRef} style={{ float: "left", clear: "both" }} />
       </div>
       {loading && (
-        <div>
-          <CircularProgress className={classes.circleLoading} />
+        <div style={{ padding: "20px 20px 0 20px" }}>
+          {[
+            { fromMe: false, w: 180 },
+            { fromMe: true,  w: 240 },
+            { fromMe: false, w: 130 },
+            { fromMe: true,  w: 200 },
+            { fromMe: false, w: 160 },
+            { fromMe: true,  w: 110 },
+          ].map((item, i) => (
+            <div key={i} style={{
+              display: "flex",
+              justifyContent: item.fromMe ? "flex-end" : "flex-start",
+              marginBottom: 6,
+            }}>
+              <Skeleton
+                variant="rect"
+                width={item.w}
+                height={36}
+                style={{ borderRadius: item.fromMe ? "8px 8px 0 8px" : "0 8px 8px 8px" }}
+              />
+            </div>
+          ))}
         </div>
       )}
     </div>

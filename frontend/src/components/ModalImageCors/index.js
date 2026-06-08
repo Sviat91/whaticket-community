@@ -4,21 +4,21 @@ import { makeStyles } from "@material-ui/core/styles";
 import ModalImage from "react-modal-image";
 import api from "../../services/api";
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles(() => ({
 	messageMedia: {
-		objectFit: "cover",
+		objectFit: "contain",
 		width: 250,
-		height: 200,
+		height: "auto",
+		maxHeight: 350,
 		borderRadius: 8,
 		display: "block",
+		backgroundColor: "transparent",
 	},
 	imageWrapper: {
-		"& > span, & > div, & img": {
+		"& > div > img": {
 			borderRadius: 8,
 			display: "block",
-		},
-		"& > span": {
-			backgroundColor: "transparent !important",
+			backgroundColor: "transparent",
 		},
 	},
 }));
@@ -51,6 +51,8 @@ const ModalImageCors = ({ imageUrl }) => {
 				medium={fetching ? imageUrl : blobUrl}
 				large={fetching ? imageUrl : blobUrl}
 				alt="image"
+				imageBackgroundColor="transparent"
+				hideDownload={false}
 			/>
 		</div>
 	);

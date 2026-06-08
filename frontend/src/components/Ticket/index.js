@@ -6,6 +6,7 @@ import openSocket from "../../services/socket-io";
 import clsx from "clsx";
 
 import { Paper, makeStyles } from "@material-ui/core";
+import { Upload } from "lucide-react";
 
 import ContactDrawer from "../ContactDrawer";
 import MessageInput from "../MessageInput/";
@@ -187,12 +188,21 @@ const Ticket = () => {
       {isDraggingOver && (
         <div style={{
           position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: "rgba(0,0,0,0.5)", zIndex: 9999,
-          display: "flex", justifyContent: "center", alignItems: "center",
-          color: "#fff", fontSize: "2rem", fontWeight: "bold",
+          backgroundColor: "rgba(0,0,0,0.6)",
+          zIndex: 9999,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          color: "#fff",
           pointerEvents: "none",
+          border: "3px dashed rgba(255,255,255,0.5)",
+          boxSizing: "border-box",
+          margin: 12,
+          borderRadius: 12,
         }}>
-          Drop files here
+          <Upload size={48} style={{ marginBottom: 12, opacity: 0.9 }} />
+          <span style={{ fontSize: "1.2rem", fontWeight: 600 }}>Drop files here</span>
         </div>
       )}
       <Paper
