@@ -1,6 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <script>
+      (function() {
+        try {
+          var dark = localStorage.getItem('darkMode') === 'true';
+          if (!dark && window.matchMedia)
+            dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          document.documentElement.style.backgroundColor = dark ? '#111b21' : '#f0f2f5';
+        } catch(e) {}
+      })();
+    </script>
     <title>AVS-Chats</title>
     <link
       rel="stylesheet"

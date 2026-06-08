@@ -9,10 +9,17 @@ const useStyles = makeStyles(theme => ({
 		objectFit: "cover",
 		width: 250,
 		height: 200,
-		borderTopLeftRadius: 8,
-		borderTopRightRadius: 8,
-		borderBottomLeftRadius: 8,
-		borderBottomRightRadius: 8,
+		borderRadius: 8,
+		display: "block",
+	},
+	imageWrapper: {
+		"& > span, & > div, & img": {
+			borderRadius: 8,
+			display: "block",
+		},
+		"& > span": {
+			backgroundColor: "transparent !important",
+		},
 	},
 }));
 
@@ -37,13 +44,15 @@ const ModalImageCors = ({ imageUrl }) => {
 	}, [imageUrl]);
 
 	return (
-		<ModalImage
-			className={classes.messageMedia}
-			smallSrcSet={fetching ? imageUrl : blobUrl}
-			medium={fetching ? imageUrl : blobUrl}
-			large={fetching ? imageUrl : blobUrl}
-			alt="image"
-		/>
+		<div className={classes.imageWrapper}>
+			<ModalImage
+				className={classes.messageMedia}
+				smallSrcSet={fetching ? imageUrl : blobUrl}
+				medium={fetching ? imageUrl : blobUrl}
+				large={fetching ? imageUrl : blobUrl}
+				alt="image"
+			/>
+		</div>
 	);
 };
 

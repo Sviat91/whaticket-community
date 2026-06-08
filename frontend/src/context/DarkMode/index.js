@@ -20,13 +20,10 @@ export const ThemeProvider = ({ children }) => {
   const theme = useMemo(() => createMuiTheme({
     palette: {
       type: darkMode ? "dark" : "light",
-      primary: { main: "#25D366" },
-      ...(darkMode && {
-        background: {
-          default: "#111B21",
-          paper:   "#1F2C34",
-        },
-      }),
+      primary: { main: darkMode ? "#00a884" : "#008069" },
+      ...(darkMode
+        ? { background: { default: "#111B21", paper: "#202c33" } }
+        : { background: { default: "#f0f2f5", paper: "#ffffff" } }),
     },
     scrollbarStyles: {
       "&::-webkit-scrollbar": { width: "6px", height: "6px" },

@@ -6,9 +6,7 @@ import clsx from "clsx";
 
 import { green } from "@material-ui/core/colors";
 import {
-  Button,
   CircularProgress,
-  Divider,
   IconButton,
   makeStyles,
 } from "@material-ui/core";
@@ -18,7 +16,6 @@ import {
   Done,
   DoneAll,
   ExpandMore,
-  GetApp,
 } from "@material-ui/icons";
 
 import MarkdownWrapper from "../MarkdownWrapper";
@@ -253,12 +250,36 @@ const useStyles = makeStyles((theme) => ({
     marginLeft: 4,
   },
 
-  downloadMedia: {
+  docCard: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    padding: "8px 10px",
+    textDecoration: "none",
+    color: "inherit",
+  },
+  docIconBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 6,
+    backgroundColor: theme.palette.type === "dark" ? "#374045" : "#e0e0e0",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "inherit",
-    padding: 10,
+    flexShrink: 0,
+  },
+  docExt: {
+    fontSize: 10,
+    fontWeight: 700,
+    color: theme.palette.text.secondary,
+    textTransform: "uppercase",
+  },
+  docName: {
+    fontSize: 13,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+    maxWidth: 170,
   },
 }));
 
@@ -489,21 +510,20 @@ const MessagesList = ({ ticketId, isGroup, pendingMessages = [], onFromMeMessage
         />
       );
     } else {
+      const filename = message.mediaUrl?.split('/').pop() || 'File';
+      const ext = filename.split('.').pop()?.toUpperCase() || 'FILE';
       return (
-        <>
-          <div className={classes.downloadMedia}>
-            <Button
-              startIcon={<GetApp />}
-              color="primary"
-              variant="outlined"
-              target="_blank"
-              href={message.mediaUrl}
-            >
-              Download
-            </Button>
+        <a
+          href={message.mediaUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={classes.docCard}
+        >
+          <div className={classes.docIconBadge}>
+            <span className={classes.docExt}>{ext}</span>
           </div>
-          <Divider />
-        </>
+          <span className={classes.docName}>{filename}</span>
+        </a>
       );
     }
   };

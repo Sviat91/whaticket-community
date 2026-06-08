@@ -24,7 +24,7 @@ const useStyles = makeStyles((theme) => ({
 		alignItems: "center",
 		paddingTop: theme.spacing(1.5),
 		paddingBottom: theme.spacing(1.5),
-		backgroundColor: theme.palette.background.paper,
+		backgroundColor: theme.palette.background.default,
 		borderRight: `1px solid ${
 			theme.palette.type === "dark" ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.07)"
 		}`,
@@ -54,8 +54,8 @@ const useStyles = makeStyles((theme) => ({
 		gap: 4,
 	},
 	themeToggle: {
-		width: 36,
-		height: 28,
+		width: 50,
+		height: 40,
 		objectFit: "contain",
 		cursor: "pointer",
 		borderRadius: 4,
