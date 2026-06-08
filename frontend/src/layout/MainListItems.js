@@ -2,12 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { useHistory, useLocation } from "react-router-dom";
 import { makeStyles, Tooltip, IconButton, Badge, Divider } from "@material-ui/core";
 import WhatsAppIcon from "@material-ui/icons/WhatsApp";
-import SyncAltIcon from "@material-ui/icons/SyncAlt";
-import SettingsOutlinedIcon from "@material-ui/icons/SettingsOutlined";
-import PeopleAltOutlinedIcon from "@material-ui/icons/PeopleAltOutlined";
-import ContactPhoneOutlinedIcon from "@material-ui/icons/ContactPhoneOutlined";
-import AccountTreeOutlinedIcon from "@material-ui/icons/AccountTreeOutlined";
-import QuestionAnswerOutlinedIcon from "@material-ui/icons/QuestionAnswerOutlined";
+import { ArrowLeftRight, Users, MessageSquare, UserCog, Settings } from "lucide-react";
 
 import { i18n } from "../translate/i18n";
 import { WhatsAppsContext } from "../context/WhatsApp/WhatsAppsContext";
@@ -108,7 +103,7 @@ const MainListItems = () => {
 				title={i18n.t("mainDrawer.listItems.connections")}
 				icon={
 					<Badge badgeContent={connectionWarning ? "!" : 0} color="error">
-						<SyncAltIcon fontSize="small" />
+						<ArrowLeftRight size={18} />
 					</Badge>
 				}
 			/>
@@ -124,12 +119,12 @@ const MainListItems = () => {
 			<NavBtn
 				to="/contacts"
 				title={i18n.t("mainDrawer.listItems.contacts")}
-				icon={<ContactPhoneOutlinedIcon fontSize="small" />}
+				icon={<Users size={18} />}
 			/>
 			<NavBtn
 				to="/quickAnswers"
 				title={i18n.t("mainDrawer.listItems.quickAnswers")}
-				icon={<QuestionAnswerOutlinedIcon fontSize="small" />}
+				icon={<MessageSquare size={18} />}
 			/>
 			<Can
 				role={user.profile}
@@ -140,17 +135,12 @@ const MainListItems = () => {
 						<NavBtn
 							to="/users"
 							title={i18n.t("mainDrawer.listItems.users")}
-							icon={<PeopleAltOutlinedIcon fontSize="small" />}
-						/>
-						<NavBtn
-							to="/Queues"
-							title={i18n.t("mainDrawer.listItems.queues")}
-							icon={<AccountTreeOutlinedIcon fontSize="small" />}
+							icon={<UserCog size={18} />}
 						/>
 						<NavBtn
 							to="/Settings"
 							title={i18n.t("mainDrawer.listItems.settings")}
-							icon={<SettingsOutlinedIcon fontSize="small" />}
+							icon={<Settings size={18} />}
 						/>
 					</>
 				)}

@@ -1,18 +1,17 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useContext, useRef, useState } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import Paper from "@material-ui/core/Paper";
-import SearchIcon from "@material-ui/icons/Search";
 import InputBase from "@material-ui/core/InputBase";
-import Tabs from "@material-ui/core/Tabs";
-import Tab from "@material-ui/core/Tab";
-import MoveToInboxIcon from "@material-ui/icons/MoveToInbox";
+import Typography from "@material-ui/core/Typography";
+import IconButton from "@material-ui/core/IconButton";
+import Menu from "@material-ui/core/Menu";
+import MenuItem from "@material-ui/core/MenuItem";
+import { SquarePen, MoreVertical, Search } from "lucide-react";
+
 import NewTicketModal from "../NewTicketModal";
 import TicketsList from "../TicketsList";
-import TabPanel from "../TabPanel";
-import { i18n } from "../../translate/i18n";
 import { AuthContext } from "../../context/Auth/AuthContext";
 import TicketsQueueSelect from "../TicketsQueueSelect";
-import { Button } from "@material-ui/core";
 
 const useStyles = makeStyles((theme) => ({
   ticketsWrapper: {
@@ -26,154 +25,170 @@ const useStyles = makeStyles((theme) => ({
     backgroundColor: theme.palette.background.default,
     color: theme.palette.text.primary,
   },
-  tabsHeader: {
-    flex: "none",
-    backgroundColor: theme.palette.background.paper,
-  },
-  tab: {
-    minWidth: 120,
-    width: 120,
-  },
-  ticketOptionsBox: {
+  header: {
     display: "flex",
-    justifyContent: "space-between",
     alignItems: "center",
-    background: theme.palette.background.paper,
-    padding: theme.spacing(1),
+    justifyContent: "space-between",
+    padding: "10px 12px 6px 16px",
+    flexShrink: 0,
   },
-  serachInputWrapper: {
-    flex: 1,
-    background: theme.palette.background.default,
+  headerTitle: {
+    fontWeight: 600,
+    fontSize: 16,
+  },
+  headerActions: {
     display: "flex",
-    borderRadius: 40,
-    padding: 4,
-    marginRight: theme.spacing(1),
+    alignItems: "center",
   },
-  searchIcon: {
-    color: "grey",
-    marginLeft: 6,
-    marginRight: 6,
-    alignSelf: "center",
+  searchBar: {
+    display: "flex",
+    alignItems: "center",
+    backgroundColor: theme.palette.background.paper,
+    borderRadius: 8,
+    margin: "0 12px 8px 12px",
+    padding: "4px 10px",
+    flexShrink: 0,
   },
   searchInput: {
     flex: 1,
-    border: "none",
-    borderRadius: 30,
+    marginLeft: 8,
+    fontSize: 14,
     color: theme.palette.text.primary,
-    backgroundColor: theme.palette.background.default,
+  },
+  filterRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    padding: "0 12px 8px 12px",
+    flexShrink: 0,
+  },
+  chip: {
+    border: `1px solid ${theme.palette.divider}`,
+    borderRadius: 16,
+    padding: "4px 14px",
+    fontSize: 13,
+    cursor: "pointer",
+    background: "transparent",
+    color: theme.palette.text.secondary,
+    fontFamily: "inherit",
+    outline: "none",
+  },
+  chipActive: {
+    border: "none",
+    borderRadius: 16,
+    padding: "4px 14px",
+    fontSize: 13,
+    cursor: "pointer",
+    backgroundColor: theme.palette.primary.main,
+    color: "#fff",
+    fontFamily: "inherit",
+    outline: "none",
   },
 }));
 
 const TicketsManager = () => {
   const classes = useStyles();
   const [searchParam, setSearchParam] = useState("");
-  const [tab, setTab] = useState("open");
   const [newTicketModalOpen, setNewTicketModalOpen] = useState(false);
+  const [filterUnread, setFilterUnread] = useState(false);
+  const [menuAnchor, setMenuAnchor] = useState(null);
   const searchInputRef = useRef();
   const { user } = useContext(AuthContext);
   const userQueueIds = user.queues.map((q) => q.id);
   const [selectedQueueIds, setSelectedQueueIds] = useState(userQueueIds || []);
 
-  useEffect(() => {
-    if (tab === "search") {
-      searchInputRef.current.focus();
-      setSearchParam("");
-    }
-  }, [tab]);
-
   let searchTimeout;
 
   const handleSearch = (e) => {
     const searchedTerm = e.target.value.toLowerCase();
-
     clearTimeout(searchTimeout);
-
     if (searchedTerm === "") {
       setSearchParam(searchedTerm);
-      setTab("open");
       return;
     }
-
     searchTimeout = setTimeout(() => {
       setSearchParam(searchedTerm);
     }, 500);
   };
 
-  const handleChangeTab = (e, newValue) => {
-    setTab(newValue);
-  };
+  const openMenu = (e) => setMenuAnchor(e.currentTarget);
+  const closeMenu = () => setMenuAnchor(null);
 
   return (
     <Paper elevation={0} variant="outlined" className={classes.ticketsWrapper}>
       <NewTicketModal
         modalOpen={newTicketModalOpen}
-        onClose={(e) => setNewTicketModalOpen(false)}
+        onClose={() => setNewTicketModalOpen(false)}
       />
-      <Paper elevation={0} square className={classes.tabsHeader}>
-        <Tabs
-          value={tab}
-          onChange={handleChangeTab}
-          variant="fullWidth"
-          indicatorColor="primary"
-          textColor="primary"
-          aria-label="icon label tabs example"
+
+      <div className={classes.header}>
+        <Typography className={classes.headerTitle}>Chats</Typography>
+        <div className={classes.headerActions}>
+          <IconButton size="small" onClick={() => setNewTicketModalOpen(true)}>
+            <SquarePen size={20} />
+          </IconButton>
+          <IconButton size="small" onClick={openMenu}>
+            <MoreVertical size={20} />
+          </IconButton>
+        </div>
+      </div>
+
+      <Menu
+        anchorEl={menuAnchor}
+        open={Boolean(menuAnchor)}
+        onClose={closeMenu}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        transformOrigin={{ vertical: "top", horizontal: "right" }}
+        getContentAnchorEl={null}
+      >
+        <MenuItem disableGutters>
+          <TicketsQueueSelect
+            selectedQueueIds={selectedQueueIds}
+            userQueues={user?.queues}
+            onChange={(values) => setSelectedQueueIds(values)}
+          />
+        </MenuItem>
+      </Menu>
+
+      <div className={classes.searchBar}>
+        <Search size={16} color="grey" />
+        <InputBase
+          className={classes.searchInput}
+          inputRef={searchInputRef}
+          placeholder="Search or start new chat"
+          onChange={handleSearch}
+        />
+      </div>
+
+      <div className={classes.filterRow}>
+        <button
+          className={!filterUnread ? classes.chipActive : classes.chip}
+          onClick={() => setFilterUnread(false)}
         >
-          <Tab
-            value={"open"}
-            icon={<MoveToInboxIcon />}
-            label="Chats"
-            classes={{ root: classes.tab }}
-          />
-          <Tab
-            value={"search"}
-            icon={<SearchIcon />}
-            label={i18n.t("tickets.tabs.search.title")}
-            classes={{ root: classes.tab }}
-          />
-        </Tabs>
-      </Paper>
-      <Paper square elevation={0} className={classes.ticketOptionsBox}>
-        {tab === "search" ? (
-          <div className={classes.serachInputWrapper}>
-            <SearchIcon className={classes.searchIcon} />
-            <InputBase
-              className={classes.searchInput}
-              inputRef={searchInputRef}
-              placeholder={i18n.t("tickets.search.placeholder")}
-              type="search"
-              onChange={handleSearch}
-            />
-          </div>
-        ) : (
-          <Button
-            variant="outlined"
-            color="primary"
-            onClick={() => setNewTicketModalOpen(true)}
-          >
-            {i18n.t("ticketsManager.buttons.newTicket")}
-          </Button>
-        )}
-        <TicketsQueueSelect
-          style={{ marginLeft: 6 }}
-          selectedQueueIds={selectedQueueIds}
-          userQueues={user?.queues}
-          onChange={(values) => setSelectedQueueIds(values)}
-        />
-      </Paper>
-      <TabPanel value={tab} name="open" className={classes.ticketsWrapper}>
-        <TicketsList
-          status="open"
-          showAll={true}
-          selectedQueueIds={selectedQueueIds}
-        />
-      </TabPanel>
-      <TabPanel value={tab} name="search" className={classes.ticketsWrapper}>
+          All
+        </button>
+        <button
+          className={filterUnread ? classes.chipActive : classes.chip}
+          onClick={() => setFilterUnread(true)}
+        >
+          Unread
+        </button>
+      </div>
+
+      {searchParam ? (
         <TicketsList
           searchParam={searchParam}
           showAll={true}
           selectedQueueIds={selectedQueueIds}
         />
-      </TabPanel>
+      ) : (
+        <TicketsList
+          status="open"
+          showAll={true}
+          selectedQueueIds={selectedQueueIds}
+          withUnreadMessages={filterUnread ? "true" : undefined}
+        />
+      )}
     </Paper>
   );
 };

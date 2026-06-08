@@ -54,8 +54,8 @@ const useStyles = makeStyles((theme) => ({
 		gap: 4,
 	},
 	themeToggle: {
-		width: 34,
-		height: 22,
+		width: 36,
+		height: 28,
 		objectFit: "contain",
 		cursor: "pointer",
 		borderRadius: 4,
@@ -63,7 +63,7 @@ const useStyles = makeStyles((theme) => ({
 		"&:hover": { opacity: 1 },
 	},
 	logoutBtn: {
-		padding: 6,
+		padding: 9,
 		color: theme.palette.text.secondary,
 		"&:hover": { color: theme.palette.error.main },
 	},
