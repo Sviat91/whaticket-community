@@ -440,7 +440,7 @@ const deleteMessage = async (
 
   const serializedMsgId = getSerializedMessageId(chatId, fromMe, messageId);
 
-  let message = await wbot.getMessageById(serializedMsgId);
+  let message: WbotMessage | null = await wbot.getMessageById(serializedMsgId);
 
   if (!message) {
     const chat = await wbot.getChatById(chatId);
