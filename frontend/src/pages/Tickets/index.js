@@ -45,8 +45,8 @@ const Chat = () => {
       <div className={classes.chatPapper}>
         <div style={{ display: "flex", height: "100%", width: "100%" }}>
           <div style={{
-            width: ticketId ? 0 : 360,
-            minWidth: ticketId ? 0 : 360,
+            width: 360,
+            minWidth: 360,
             flexShrink: 0,
             overflow: "hidden",
             height: "100%",

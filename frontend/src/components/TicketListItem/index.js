@@ -9,7 +9,6 @@ import ListItemText from "@material-ui/core/ListItemText";
 import ListItemAvatar from "@material-ui/core/ListItemAvatar";
 import Typography from "@material-ui/core/Typography";
 import Avatar from "@material-ui/core/Avatar";
-import Divider from "@material-ui/core/Divider";
 
 import MarkdownWrapper from "../MarkdownWrapper";
 
@@ -155,7 +154,6 @@ const TicketListItem = ({ ticket }) => {
 					}
 				/>
 			</ListItem>
-			<Divider variant="inset" component="li" />
 		</React.Fragment>
 	);
 };

@@ -115,7 +115,7 @@ const TicketsManager = () => {
   const closeMenu = () => setMenuAnchor(null);
 
   return (
-    <Paper elevation={0} variant="outlined" className={classes.ticketsWrapper}>
+    <Paper elevation={0} className={classes.ticketsWrapper}>
       <NewTicketModal
         modalOpen={newTicketModalOpen}
         onClose={() => setNewTicketModalOpen(false)}
