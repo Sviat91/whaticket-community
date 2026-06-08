@@ -19,10 +19,9 @@ const useStyles = makeStyles((theme) => ({
   },
 
   chatPapper: {
-    // backgroundColor: "red",
     display: "flex",
     height: "100%",
-    backgroundColor: theme.palette.background.paper,
+    backgroundColor: theme.palette.background.default,
   },
 
   welcomeMsg: {
