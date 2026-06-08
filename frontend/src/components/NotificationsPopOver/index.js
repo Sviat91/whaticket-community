@@ -8,6 +8,7 @@ import { i18n } from "../../translate/i18n";
 import useTickets from "../../hooks/useTickets";
 import alertSound from "../../assets/sound.mp3";
 import { AuthContext } from "../../context/Auth/AuthContext";
+import { updateFavicon } from "../../utils/favicon";
 
 const NotificationsPopOver = () => {
 	const history = useHistory();
@@ -40,9 +41,9 @@ const NotificationsPopOver = () => {
 	}, [ticketIdUrl]);
 
 	useEffect(() => {
-		document.title = notifications.length > 0
-			? `(${notifications.length}) Whaticket`
-			: "Whaticket";
+		const count = notifications.length;
+		document.title = count > 0 ? `(${count}) AVS-Chats` : "AVS-Chats";
+		updateFavicon(count);
 	}, [notifications.length]);
 
 	useEffect(() => {

@@ -1,280 +1,137 @@
-import React, { useState, useContext, useEffect } from "react";
-import clsx from "clsx";
-import {
-  makeStyles,
-  Drawer,
-  AppBar,
-  Toolbar,
-  List,
-  Typography,
-  Divider,
-  MenuItem,
-  IconButton,
-  Menu,
-} from "@material-ui/core";
-import MenuIcon from "@material-ui/icons/Menu";
-import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
-import AccountCircle from "@material-ui/icons/AccountCircle";
+import React, { useState, useContext } from "react";
+import { makeStyles, Avatar, Tooltip, IconButton } from "@material-ui/core";
+import ExitToAppIcon from "@material-ui/icons/ExitToApp";
 
 import MainListItems from "./MainListItems";
 import NotificationsPopOver from "../components/NotificationsPopOver";
 import UserModal from "../components/UserModal";
 import { AuthContext } from "../context/Auth/AuthContext";
 import BackdropLoading from "../components/BackdropLoading";
-import { i18n } from "../translate/i18n";
 import { useThemeContext } from "../context/DarkMode";
 
-const drawerWidth = 240;
-
 const useStyles = makeStyles((theme) => ({
-  root: {
-    display: "flex",
-    height: "100vh",
-    [theme.breakpoints.down("sm")]: {
-      height: "calc(100vh - 56px)",
-    },
-  },
-  toolbar: {
-    paddingRight: 24, // keep right padding when drawer closed
-  },
-  toolbarIcon: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    padding: "0 8px",
-    minHeight: "48px",
-  },
-  appBar: {
-    zIndex: theme.zIndex.drawer + 1,
-    transition: theme.transitions.create(["width", "margin"], {
-      easing: theme.transitions.easing.sharp,
-      duration: theme.transitions.duration.leavingScreen,
-    }),
-    backgroundColor: theme.palette.background.default,
-  },
-  appBarShift: {
-    marginLeft: drawerWidth,
-    width: `calc(100% - ${drawerWidth}px)`,
-    transition: theme.transitions.create(["width", "margin"], {
-      easing: theme.transitions.easing.sharp,
-      duration: theme.transitions.duration.enteringScreen,
-    }),
-  },
-  menuButton: {
-    marginRight: 36,
-    color: theme.palette.text.primary,
-  },
-  menuButtonHidden: {
-    display: "none",
-  },
-  title: {
-    flexGrow: 1,
-    color: theme.palette.text.primary,
-  },
-  drawerPaper: {
-    position: "relative",
-    whiteSpace: "nowrap",
-    width: drawerWidth,
-    transition: theme.transitions.create("width", {
-      easing: theme.transitions.easing.sharp,
-      duration: theme.transitions.duration.enteringScreen,
-    }),
-    backgroundColor: theme.palette.background.paper,
-  },
-  drawerPaperClose: {
-    overflowX: "hidden",
-    transition: theme.transitions.create("width", {
-      easing: theme.transitions.easing.sharp,
-      duration: theme.transitions.duration.leavingScreen,
-    }),
-    width: theme.spacing(7),
-    [theme.breakpoints.up("sm")]: {
-      width: theme.spacing(9),
-    },
-  },
-  appBarSpacer: {
-    minHeight: "48px",
-  },
-  content: {
-    flex: 1,
-    overflow: "auto",
-  },
-  container: {
-    paddingTop: theme.spacing(4),
-    paddingBottom: theme.spacing(4),
-  },
-  paper: {
-    padding: theme.spacing(2),
-    display: "flex",
-    overflow: "auto",
-    flexDirection: "column",
-  },
-  iconButton: {
-    color: theme.palette.text.primary,
-  },
+	root: {
+		display: "flex",
+		height: "100vh",
+		overflow: "hidden",
+		backgroundColor: theme.palette.background.default,
+	},
+	rail: {
+		width: 60,
+		flexShrink: 0,
+		display: "flex",
+		flexDirection: "column",
+		alignItems: "center",
+		paddingTop: theme.spacing(1.5),
+		paddingBottom: theme.spacing(1.5),
+		backgroundColor: theme.palette.background.paper,
+		borderRight: `1px solid ${
+			theme.palette.type === "dark" ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.07)"
+		}`,
+	},
+	userAvatar: {
+		width: 36,
+		height: 36,
+		cursor: "pointer",
+		fontSize: 15,
+		marginBottom: theme.spacing(1),
+		backgroundColor: theme.palette.primary.main,
+		transition: "opacity 0.2s",
+		"&:hover": { opacity: 0.8 },
+	},
+	navItems: {
+		flex: 1,
+		display: "flex",
+		flexDirection: "column",
+		alignItems: "center",
+		paddingTop: theme.spacing(1),
+		gap: 4,
+	},
+	railBottom: {
+		display: "flex",
+		flexDirection: "column",
+		alignItems: "center",
+		gap: 4,
+	},
+	themeToggle: {
+		width: 34,
+		height: 22,
+		objectFit: "contain",
+		cursor: "pointer",
+		borderRadius: 4,
+		opacity: 0.8,
+		"&:hover": { opacity: 1 },
+	},
+	logoutBtn: {
+		padding: 6,
+		color: theme.palette.text.secondary,
+		"&:hover": { color: theme.palette.error.main },
+	},
+	content: {
+		flex: 1,
+		overflow: "hidden",
+		display: "flex",
+		flexDirection: "column",
+	},
 }));
 
 const LoggedInLayout = ({ children }) => {
-  const classes = useStyles();
-  const [userModalOpen, setUserModalOpen] = useState(false);
-  const [anchorEl, setAnchorEl] = useState(null);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const { handleLogout, loading } = useContext(AuthContext);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [drawerVariant, setDrawerVariant] = useState("permanent");
-  const { user } = useContext(AuthContext);
-  const { darkMode, toggleTheme } = useThemeContext();
+	const classes = useStyles();
+	const [userModalOpen, setUserModalOpen] = useState(false);
+	const { handleLogout, loading, user } = useContext(AuthContext);
+	const { darkMode, toggleTheme } = useThemeContext();
 
-  useEffect(() => {
-    if (document.body.offsetWidth > 600) {
-      setDrawerOpen(true);
-    }
-  }, []);
+	if (loading) return <BackdropLoading />;
 
-  useEffect(() => {
-    if (document.body.offsetWidth < 600) {
-      setDrawerVariant("temporary");
-    } else {
-      setDrawerVariant("permanent");
-    }
-  }, [drawerOpen]);
+	return (
+		<div className={classes.root}>
+			<NotificationsPopOver />
+			<UserModal
+				open={userModalOpen}
+				onClose={() => setUserModalOpen(false)}
+				userId={user?.id}
+			/>
 
-  const handleMenu = (event) => {
-    setAnchorEl(event.currentTarget);
-    setMenuOpen(true);
-  };
+			<nav className={classes.rail}>
+				<Tooltip title={user?.name || "Profile"} placement="right">
+					<Avatar
+						className={classes.userAvatar}
+						onClick={() => setUserModalOpen(true)}
+					>
+						{user?.name?.[0]?.toUpperCase()}
+					</Avatar>
+				</Tooltip>
 
-  const handleCloseMenu = () => {
-    setAnchorEl(null);
-    setMenuOpen(false);
-  };
+				<div className={classes.navItems}>
+					<MainListItems />
+				</div>
 
-  const handleOpenUserModal = () => {
-    setUserModalOpen(true);
-    handleCloseMenu();
-  };
+				<div className={classes.railBottom}>
+					<Tooltip title={darkMode ? "Light mode" : "Dark mode"} placement="right">
+						<img
+							src={darkMode ? "/Dark.png" : "/Light.png"}
+							alt="toggle theme"
+							onClick={toggleTheme}
+							className={classes.themeToggle}
+						/>
+					</Tooltip>
+					<Tooltip title="Logout" placement="right">
+						<IconButton
+							size="small"
+							className={classes.logoutBtn}
+							onClick={handleLogout}
+						>
+							<ExitToAppIcon fontSize="small" />
+						</IconButton>
+					</Tooltip>
+				</div>
+			</nav>
 
-  const handleClickLogout = () => {
-    handleCloseMenu();
-    handleLogout();
-  };
-
-  const drawerClose = () => {
-    if (document.body.offsetWidth < 600) {
-      setDrawerOpen(false);
-    }
-  };
-
-  if (loading) {
-    return <BackdropLoading />;
-  }
-
-  return (
-    <div className={classes.root}>
-      <Drawer
-        variant={drawerVariant}
-        className={drawerOpen ? classes.drawerPaper : classes.drawerPaperClose}
-        classes={{
-          paper: clsx(
-            classes.drawerPaper,
-            !drawerOpen && classes.drawerPaperClose
-          ),
-        }}
-        open={drawerOpen}
-      >
-        <div className={classes.toolbarIcon}>
-          <IconButton onClick={() => setDrawerOpen(!drawerOpen)}>
-            <ChevronLeftIcon />
-          </IconButton>
-        </div>
-        <Divider />
-        <List>
-          <MainListItems drawerClose={drawerClose} />
-        </List>
-        <Divider />
-      </Drawer>
-      <UserModal
-        open={userModalOpen}
-        onClose={() => setUserModalOpen(false)}
-        userId={user?.id}
-      />
-      <AppBar
-        position="absolute"
-        className={clsx(classes.appBar, drawerOpen && classes.appBarShift)}
-      >
-        <Toolbar variant="dense" className={classes.toolbar}>
-          <IconButton
-            edge="start"
-            aria-label="open drawer"
-            onClick={() => setDrawerOpen(!drawerOpen)}
-            className={clsx(
-              classes.menuButton,
-              drawerOpen && classes.menuButtonHidden
-            )}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography
-            component="h1"
-            variant="h6"
-            noWrap
-            className={classes.title}
-          >
-            AVS-Chats
-          </Typography>
-
-          <img
-            src={darkMode ? "/Dark.png" : "/Light.png"}
-            alt="toggle theme"
-            onClick={toggleTheme}
-            style={{ width: 56, height: 36, objectFit: "contain", cursor: "pointer" }}
-          />
-
-          {user.id && (
-            <NotificationsPopOver className={classes.iconButton} />
-          )}
-
-          <div>
-            <IconButton
-              aria-label="account of current user"
-              aria-controls="menu-appbar"
-              aria-haspopup="true"
-              onClick={handleMenu}
-              className={classes.iconButton}
-            >
-              <AccountCircle />
-            </IconButton>
-            <Menu
-              id="menu-appbar"
-              anchorEl={anchorEl}
-              getContentAnchorEl={null}
-              anchorOrigin={{
-                vertical: "bottom",
-                horizontal: "right",
-              }}
-              transformOrigin={{
-                vertical: "top",
-                horizontal: "right",
-              }}
-              open={menuOpen}
-              onClose={handleCloseMenu}
-            >
-              <MenuItem onClick={handleOpenUserModal}>
-                {i18n.t("mainDrawer.appBar.user.profile")}
-              </MenuItem>
-              <MenuItem onClick={handleClickLogout}>
-                {i18n.t("mainDrawer.appBar.user.logout")}
-              </MenuItem>
-            </Menu>
-          </div>
-        </Toolbar>
-      </AppBar>
-      <main className={classes.content}>
-        <div className={classes.appBarSpacer} />
-        {children ? children : null}
-      </main>
-    </div>
-  );
+			<main className={classes.content}>
+				{children}
+			</main>
+		</div>
+	);
 };
 
 export default LoggedInLayout;

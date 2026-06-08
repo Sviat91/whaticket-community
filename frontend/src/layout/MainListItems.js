@@ -1,12 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Link as RouterLink } from "react-router-dom";
-
-import ListItem from "@material-ui/core/ListItem";
-import ListItemIcon from "@material-ui/core/ListItemIcon";
-import ListItemText from "@material-ui/core/ListItemText";
-import ListSubheader from "@material-ui/core/ListSubheader";
-import Divider from "@material-ui/core/Divider";
-import { Badge } from "@material-ui/core";
+import { useHistory, useLocation } from "react-router-dom";
+import { makeStyles, Tooltip, IconButton, Badge, Divider } from "@material-ui/core";
 import WhatsAppIcon from "@material-ui/icons/WhatsApp";
 import SyncAltIcon from "@material-ui/icons/SyncAlt";
 import SettingsOutlinedIcon from "@material-ui/icons/SettingsOutlined";
@@ -22,144 +16,147 @@ import { Can } from "../components/Can";
 import openSocket from "../services/socket-io";
 import api from "../services/api";
 
-function ListItemLink(props) {
-  const { icon, primary, to, className } = props;
+const useNavStyles = makeStyles((theme) => ({
+	btn: {
+		padding: 9,
+		borderRadius: 8,
+		color: theme.palette.text.secondary,
+		transition: "background 0.15s, color 0.15s",
+		"&:hover": {
+			backgroundColor:
+				theme.palette.type === "dark" ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
+			color: theme.palette.primary.main,
+		},
+	},
+	active: {
+		color: theme.palette.primary.main,
+		backgroundColor:
+			theme.palette.type === "dark" ? "rgba(0,168,132,0.12)" : "rgba(0,128,105,0.10)",
+	},
+	divider: {
+		width: 30,
+		margin: "6px 0",
+		backgroundColor:
+			theme.palette.type === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
+	},
+}));
 
-  const renderLink = React.useMemo(
-    () =>
-      React.forwardRef((itemProps, ref) => (
-        <RouterLink to={to} ref={ref} {...itemProps} />
-      )),
-    [to]
-  );
+const NavBtn = ({ to, title, icon }) => {
+	const classes = useNavStyles();
+	const history = useHistory();
+	const location = useLocation();
+	const active = location.pathname.startsWith(to);
 
-  return (
-    <li>
-      <ListItem button component={renderLink} className={className}>
-        {icon ? <ListItemIcon>{icon}</ListItemIcon> : null}
-        <ListItemText primary={primary} />
-      </ListItem>
-    </li>
-  );
-}
+	return (
+		<Tooltip title={title} placement="right">
+			<IconButton
+				size="small"
+				className={`${classes.btn} ${active ? classes.active : ""}`}
+				onClick={() => history.push(to)}
+			>
+				{icon}
+			</IconButton>
+		</Tooltip>
+	);
+};
 
-const MainListItems = (props) => {
-  const { drawerClose } = props;
-  const { whatsApps } = useContext(WhatsAppsContext);
-  const { user } = useContext(AuthContext);
-  const [connectionWarning, setConnectionWarning] = useState(false);
-  const [unreadTicketIds, setUnreadTicketIds] = useState(new Set());
-  const unreadCount = unreadTicketIds.size;
+const MainListItems = () => {
+	const classes = useNavStyles();
+	const { whatsApps } = useContext(WhatsAppsContext);
+	const { user } = useContext(AuthContext);
+	const [connectionWarning, setConnectionWarning] = useState(false);
+	const [unreadTicketIds, setUnreadTicketIds] = useState(new Set());
 
-  useEffect(() => {
-    api.get("/tickets", { params: { withUnreadMessages: "true" } })
-      .then(({ data }) => setUnreadTicketIds(new Set(data.tickets.map(t => t.id))))
-      .catch(() => {});
+	useEffect(() => {
+		api.get("/tickets", { params: { withUnreadMessages: "true" } })
+			.then(({ data }) => setUnreadTicketIds(new Set(data.tickets.map(t => t.id))))
+			.catch(() => {});
 
-    const socket = openSocket();
-    socket.on("connect", () => socket.emit("joinNotification"));
+		const socket = openSocket();
+		socket.on("connect", () => socket.emit("joinNotification"));
+		socket.on("appMessage", data => {
+			if (data.action === "create" && !data.message.read)
+				setUnreadTicketIds(prev => new Set([...prev, data.ticket.id]));
+		});
+		socket.on("ticket", data => {
+			if (data.action === "updateUnread" || data.action === "delete")
+				setUnreadTicketIds(prev => {
+					const s = new Set(prev);
+					s.delete(data.ticketId);
+					return s;
+				});
+		});
+		return () => socket.disconnect();
+	}, []);
 
-    socket.on("appMessage", data => {
-      if (data.action === "create" && !data.message.read) {
-        setUnreadTicketIds(prev => new Set([...prev, data.ticket.id]));
-      }
-    });
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			if (whatsApps.length > 0) {
+				const offline = whatsApps.filter(w =>
+					["qrcode", "PAIRING", "DISCONNECTED", "TIMEOUT", "OPENING"].includes(w.status)
+				);
+				setConnectionWarning(offline.length > 0);
+			}
+		}, 2000);
+		return () => clearTimeout(timer);
+	}, [whatsApps]);
 
-    socket.on("ticket", data => {
-      if (data.action === "updateUnread" || data.action === "delete") {
-        setUnreadTicketIds(prev => {
-          const next = new Set(prev);
-          next.delete(data.ticketId);
-          return next;
-        });
-      }
-    });
-
-    return () => socket.disconnect();
-  }, []);
-
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      if (whatsApps.length > 0) {
-        const offlineWhats = whatsApps.filter((whats) => {
-          return (
-            whats.status === "qrcode" ||
-            whats.status === "PAIRING" ||
-            whats.status === "DISCONNECTED" ||
-            whats.status === "TIMEOUT" ||
-            whats.status === "OPENING"
-          );
-        });
-        if (offlineWhats.length > 0) {
-          setConnectionWarning(true);
-        } else {
-          setConnectionWarning(false);
-        }
-      }
-    }, 2000);
-    return () => clearTimeout(delayDebounceFn);
-  }, [whatsApps]);
-
-  return (
-    <div onClick={drawerClose}>
-      <ListItemLink
-        to="/connections"
-        primary={i18n.t("mainDrawer.listItems.connections")}
-        icon={
-          <Badge badgeContent={connectionWarning ? "!" : 0} color="error">
-            <SyncAltIcon />
-          </Badge>
-        }
-      />
-      <ListItemLink
-        to="/tickets"
-        primary="Chats"
-        icon={
-          <Badge badgeContent={unreadCount} color="secondary">
-            <WhatsAppIcon />
-          </Badge>
-        }
-      />
-
-      <ListItemLink
-        to="/contacts"
-        primary={i18n.t("mainDrawer.listItems.contacts")}
-        icon={<ContactPhoneOutlinedIcon />}
-      />
-      <ListItemLink
-        to="/quickAnswers"
-        primary={i18n.t("mainDrawer.listItems.quickAnswers")}
-        icon={<QuestionAnswerOutlinedIcon />}
-      />
-      <Can
-        role={user.profile}
-        perform="drawer-admin-items:view"
-        yes={() => (
-          <>
-            <Divider />
-            <ListSubheader inset>
-              {i18n.t("mainDrawer.listItems.administration")}
-            </ListSubheader>
-            <ListItemLink
-              to="/users"
-              primary={i18n.t("mainDrawer.listItems.users")}
-              icon={<PeopleAltOutlinedIcon />}
-            />
-            <ListItemLink
-              to="/queues"
-              primary={i18n.t("mainDrawer.listItems.queues")}
-              icon={<AccountTreeOutlinedIcon />}
-            />
-            <ListItemLink
-              to="/settings"
-              primary={i18n.t("mainDrawer.listItems.settings")}
-              icon={<SettingsOutlinedIcon />}
-            />
-          </>
-        )}
-      />
-    </div>
-  );
+	return (
+		<>
+			<NavBtn
+				to="/connections"
+				title={i18n.t("mainDrawer.listItems.connections")}
+				icon={
+					<Badge badgeContent={connectionWarning ? "!" : 0} color="error">
+						<SyncAltIcon fontSize="small" />
+					</Badge>
+				}
+			/>
+			<NavBtn
+				to="/tickets"
+				title="Chats"
+				icon={
+					<Badge badgeContent={unreadTicketIds.size} color="secondary" max={99}>
+						<WhatsAppIcon fontSize="small" />
+					</Badge>
+				}
+			/>
+			<NavBtn
+				to="/contacts"
+				title={i18n.t("mainDrawer.listItems.contacts")}
+				icon={<ContactPhoneOutlinedIcon fontSize="small" />}
+			/>
+			<NavBtn
+				to="/quickAnswers"
+				title={i18n.t("mainDrawer.listItems.quickAnswers")}
+				icon={<QuestionAnswerOutlinedIcon fontSize="small" />}
+			/>
+			<Can
+				role={user.profile}
+				perform="drawer-admin-items:view"
+				yes={() => (
+					<>
+						<Divider className={classes.divider} />
+						<NavBtn
+							to="/users"
+							title={i18n.t("mainDrawer.listItems.users")}
+							icon={<PeopleAltOutlinedIcon fontSize="small" />}
+						/>
+						<NavBtn
+							to="/Queues"
+							title={i18n.t("mainDrawer.listItems.queues")}
+							icon={<AccountTreeOutlinedIcon fontSize="small" />}
+						/>
+						<NavBtn
+							to="/Settings"
+							title={i18n.t("mainDrawer.listItems.settings")}
+							icon={<SettingsOutlinedIcon fontSize="small" />}
+						/>
+					</>
+				)}
+			/>
+		</>
+	);
 };
 
 export default MainListItems;
