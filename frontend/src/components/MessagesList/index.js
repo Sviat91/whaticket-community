@@ -282,7 +282,14 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+const messagesCache = new Map();
+const CACHE_MAX_SIZE = 20;
+
 const reducer = (state, action) => {
+  if (action.type === 'RESTORE_CACHE') {
+    return [...action.payload];
+  }
+
   if (action.type === "LOAD_MESSAGES") {
     const messages = action.payload;
     const newMessages = [];
@@ -347,29 +354,45 @@ const MessagesList = ({ ticketId, isGroup, pendingMessages = [], onFromMeMessage
   const shouldStickRef = useRef(true);
 
   useEffect(() => {
-    dispatch({ type: "RESET" });
-    setPageNumber(1);
-    pendingScrollRef.current = false;
-    shouldStickRef.current = true;
     currentTicketId.current = ticketId;
+    shouldStickRef.current = true;
+    setPageNumber(1);
+
+    const cached = messagesCache.get(String(ticketId));
+    if (cached) {
+      pendingScrollRef.current = true;
+      dispatch({ type: 'RESTORE_CACHE', payload: cached });
+    } else {
+      pendingScrollRef.current = false;
+      dispatch({ type: 'RESET' });
+    }
   }, [ticketId]);
 
   useEffect(() => {
-    setLoading(true);
+    const hasCached = pageNumber === 1 && messagesCache.has(String(ticketId));
+    if (!hasCached) setLoading(true);
+
     const delayDebounceFn = setTimeout(() => {
       const fetchMessages = async () => {
         try {
-          const { data } = await api.get("/messages/" + ticketId, {
+          const { data } = await api.get('/messages/' + ticketId, {
             params: { pageNumber },
           });
 
           if (currentTicketId.current === ticketId) {
-            if (pageNumber === 1 && data.messages.length > 0) {
+            if (pageNumber === 1 && data.messages.length > 0 && !hasCached) {
               pendingScrollRef.current = true;
             }
-            dispatch({ type: "LOAD_MESSAGES", payload: data.messages });
+            dispatch({ type: 'LOAD_MESSAGES', payload: data.messages });
             setHasMore(data.hasMore);
             setLoading(false);
+
+            if (pageNumber === 1) {
+              messagesCache.set(String(ticketId), data.messages);
+              if (messagesCache.size > CACHE_MAX_SIZE) {
+                messagesCache.delete(messagesCache.keys().next().value);
+              }
+            }
           }
         } catch (err) {
           setLoading(false);
@@ -388,23 +411,30 @@ const MessagesList = ({ ticketId, isGroup, pendingMessages = [], onFromMeMessage
 
     socket.on("connect", () => socket.emit("joinChatBox", ticketId));
 
-    socket.on("appMessage", (data) => {
-      if (data.action === "create") {
+    socket.on('appMessage', (data) => {
+      if (data.action === 'create') {
         pendingScrollNewMsg.current = true;
-        dispatch({ type: "ADD_MESSAGE", payload: data.message });
+        dispatch({ type: 'ADD_MESSAGE', payload: data.message });
         if (data.message.fromMe && onFromMeMessage) {
           onFromMeMessage();
         }
         if (
           String(data.message.ticketId) === String(ticketId) &&
-          document.visibilityState === "visible"
+          document.visibilityState === 'visible'
         ) {
-          api.put(`/messages/${ticketId}`).catch(() => {});
+          api.put('/messages/' + ticketId).catch(() => {});
+        }
+
+        const msgTicketKey = String(data.message.ticketId);
+        const cached = messagesCache.get(msgTicketKey);
+        if (cached) {
+          const exists = cached.some((m) => m.id === data.message.id);
+          if (!exists) messagesCache.set(msgTicketKey, [...cached, data.message]);
         }
       }
 
-      if (data.action === "update") {
-        dispatch({ type: "UPDATE_MESSAGE", payload: data.message });
+      if (data.action === 'update') {
+        dispatch({ type: 'UPDATE_MESSAGE', payload: data.message });
       }
     });
 
