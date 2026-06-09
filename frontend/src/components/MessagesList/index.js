@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useReducer, useRef } from "react";
+import React, { useState, useEffect, useLayoutEffect, useReducer, useRef } from 'react';
 
 import { isSameDay, parseISO, format } from "date-fns";
 import openSocket from "../../services/socket-io";
@@ -50,6 +50,12 @@ const useStyles = makeStyles((theme) => ({
       paddingBottom: "90px",
     },
     ...theme.scrollbarStyles,
+  },
+
+  messagesContent: {
+    display: "flex",
+    flexDirection: "column",
+    flexGrow: 1,
   },
 
   messageLeft: {
@@ -336,11 +342,15 @@ const MessagesList = ({ ticketId, isGroup, pendingMessages = [], onFromMeMessage
   const messageOptionsMenuOpen = Boolean(anchorEl);
   const currentTicketId = useRef(ticketId);
   const pendingScrollRef = useRef(false);
+  const pendingScrollNewMsg = useRef(false);
+  const scrollContainerRef = useRef(null);
+  const shouldStickRef = useRef(true);
 
   useEffect(() => {
     dispatch({ type: "RESET" });
     setPageNumber(1);
     pendingScrollRef.current = false;
+    shouldStickRef.current = true;
     currentTicketId.current = ticketId;
   }, [ticketId]);
 
@@ -354,7 +364,7 @@ const MessagesList = ({ ticketId, isGroup, pendingMessages = [], onFromMeMessage
           });
 
           if (currentTicketId.current === ticketId) {
-            if (pageNumber === 1 && data.messages.length > 1) {
+            if (pageNumber === 1 && data.messages.length > 0) {
               pendingScrollRef.current = true;
             }
             dispatch({ type: "LOAD_MESSAGES", payload: data.messages });
@@ -380,8 +390,8 @@ const MessagesList = ({ ticketId, isGroup, pendingMessages = [], onFromMeMessage
 
     socket.on("appMessage", (data) => {
       if (data.action === "create") {
+        pendingScrollNewMsg.current = true;
         dispatch({ type: "ADD_MESSAGE", payload: data.message });
-        scrollToBottom();
         if (data.message.fromMe && onFromMeMessage) {
           onFromMeMessage();
         }
@@ -409,22 +419,29 @@ const MessagesList = ({ ticketId, isGroup, pendingMessages = [], onFromMeMessage
   };
 
   const scrollToBottom = () => {
-    if (lastMessageRef.current) {
-      lastMessageRef.current.scrollIntoView({});
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
     }
   };
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (pendingScrollRef.current && messagesList.length > 0) {
       pendingScrollRef.current = false;
+      pendingScrollNewMsg.current = false;
+      shouldStickRef.current = true;
       scrollToBottom();
+    } else if (pendingScrollNewMsg.current) {
+      pendingScrollNewMsg.current = false;
+      if (shouldStickRef.current) scrollToBottom();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messagesList]);
 
   const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    shouldStickRef.current = scrollHeight - scrollTop - clientHeight < 80;
+
     if (!hasMore) return;
-    const { scrollTop } = e.currentTarget;
 
     if (scrollTop === 0) {
       document.getElementById("messagesList").scrollTop = 1;
@@ -708,10 +725,12 @@ const MessagesList = ({ ticketId, isGroup, pendingMessages = [], onFromMeMessage
         handleClose={handleCloseMessageOptionsMenu}
       />
       <div
-        id="messagesList"
+        id='messagesList'
+        ref={scrollContainerRef}
         className={classes.messagesList}
         onScroll={handleScroll}
       >
+        <div className={classes.messagesContent}>
         {messagesList.length > 0 ? renderMessages() : []}
         {pendingMessages.map(msg => (
           <div key={msg.id} className={classes.messageRight} style={{ opacity: 0.65 }}>
@@ -752,6 +771,7 @@ const MessagesList = ({ ticketId, isGroup, pendingMessages = [], onFromMeMessage
           </div>
         )}
         <div ref={lastMessageRef} style={{ float: "left", clear: "both" }} />
+        </div>
       </div>
     </div>
   );
