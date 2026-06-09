@@ -62,11 +62,11 @@ const useStyles = makeStyles((theme) => ({
     marginRight: 20,
     marginTop: 2,
     minWidth: 100,
-    maxWidth: 600,
-    width: "fit-content",
-    height: "auto",
-    display: "block",
-    position: "relative",
+    maxWidth: 260,
+    width: 'fit-content',
+    display: 'flex',
+    flexDirection: 'column',
+    position: 'relative',
     "&:hover #messageActionsButton": {
       display: "flex",
       position: "absolute",
@@ -90,7 +90,7 @@ const useStyles = makeStyles((theme) => ({
   },
 
   quotedContainerLeft: {
-    margin: "-3px -80px 6px -6px",
+    margin: '-3px -6px 6px -6px',
     overflow: "hidden",
     backgroundColor: theme.palette.type === "dark" ? "#1A272F" : "#f0f0f0",
     borderRadius: "7.5px",
@@ -117,11 +117,11 @@ const useStyles = makeStyles((theme) => ({
     marginLeft: 20,
     marginTop: 2,
     minWidth: 100,
-    maxWidth: 600,
-    width: "fit-content",
-    height: "auto",
-    display: "block",
-    position: "relative",
+    maxWidth: 260,
+    width: 'fit-content',
+    display: 'flex',
+    flexDirection: 'column',
+    position: 'relative',
     "&:hover #messageActionsButton": {
       display: "flex",
       position: "absolute",
@@ -145,7 +145,7 @@ const useStyles = makeStyles((theme) => ({
   },
 
   quotedContainerRight: {
-    margin: "-3px -80px 6px -6px",
+    margin: '-3px -6px 6px -6px',
     overflowY: "hidden",
     backgroundColor: theme.palette.type === "dark" ? "#025144" : "#cfe9ba",
     borderRadius: "7.5px",
@@ -183,25 +183,35 @@ const useStyles = makeStyles((theme) => ({
   },
 
   textContentItem: {
-    overflowWrap: "break-word",
-    padding: "3px 80px 6px 6px",
+    overflowWrap: 'break-word',
+    padding: '3px 6px 6px 6px',
+    '&::after': {
+      content: '""',
+      display: 'inline-block',
+      width: 65,
+      height: 0,
+    },
   },
 
   textContentItemDeleted: {
-    fontStyle: "italic",
-    color: "rgba(0, 0, 0, 0.36)",
-    overflowWrap: "break-word",
-    padding: "3px 80px 6px 6px",
+    fontStyle: 'italic',
+    color: 'rgba(0, 0, 0, 0.36)',
+    overflowWrap: 'break-word',
+    padding: '3px 6px 6px 6px',
+    '&::after': {
+      content: '""',
+      display: 'inline-block',
+      width: 65,
+      height: 0,
+    },
   },
 
   messageMedia: {
-    objectFit: "contain",
+    objectFit: 'cover',
     width: 250,
-    height: "auto",
-    maxHeight: 350,
+    aspectRatio: '4/3',
     borderRadius: 8,
-    display: "block",
-    backgroundColor: "transparent",
+    display: 'block',
   },
 
   timestamp: {

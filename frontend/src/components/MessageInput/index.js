@@ -26,6 +26,7 @@ import RecordingTimer from "./RecordingTimer";
 import { ReplyMessageContext } from "../../context/ReplyingMessage/ReplyingMessageContext";
 import { AuthContext } from "../../context/Auth/AuthContext";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
+import { useThemeContext } from "../../context/DarkMode";
 import toastError from "../../errors/toastError";
 
 let Mp3Recorder = null;
@@ -221,6 +222,7 @@ const useStyles = makeStyles(theme => ({
 const MessageInput = ({ ticketStatus, droppedFiles = [], onDropHandled, onOptimisticSend }) => {
   const classes = useStyles();
   const { ticketId } = useParams();
+  const { darkMode } = useThemeContext();
 
   const [medias, setMedias] = useState([]);
   const [inputMessage, setInputMessage] = useState("");
@@ -507,6 +509,7 @@ const MessageInput = ({ ticketStatus, droppedFiles = [], onDropHandled, onOptimi
                     showPreview={false}
                     showSkinTones={false}
                     onSelect={handleAddEmoji}
+                    theme={darkMode ? 'dark' : 'light'}
                   />
                 </ClickAwayListener>
               </div>

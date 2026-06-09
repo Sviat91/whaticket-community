@@ -11,7 +11,7 @@ const useStyles = makeStyles((theme) => ({
 	},
 	imageContainer: {
 		width: 250,
-		aspectRatio: '1/1',
+		aspectRatio: '4/3',
 		overflow: 'hidden',
 		borderRadius: 8,
 		flexShrink: 0,
