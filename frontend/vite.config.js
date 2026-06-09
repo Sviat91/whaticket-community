@@ -10,6 +10,17 @@ export default defineConfig({
   server: {
     port: 3000,
     open: true,
+    proxy: {
+      "/socket.io": {
+        target: "https://api.avschats.nodayoby.online",
+        changeOrigin: true,
+        ws: true,
+      },
+      "^/(auth|login|logout|signup|refresh_token|users|contacts|contact|tickets|messages|whatsapp|queues|queue|quickAnswers|settings|api)": {
+        target: "https://api.avschats.nodayoby.online",
+        changeOrigin: true,
+      },
+    },
   },
   build: {
     outDir: "build",
