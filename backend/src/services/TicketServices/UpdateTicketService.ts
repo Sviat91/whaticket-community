@@ -61,19 +61,16 @@ const UpdateTicketService = async ({
   const io = getIO();
 
   if (ticket.status !== oldStatus || ticket.user?.id !== oldUserId) {
-    io.to(oldStatus).emit("ticket", {
+    io.emit("ticket", {
       action: "delete",
       ticketId: ticket.id
     });
   }
 
-  io.to(ticket.status)
-    .to("notification")
-    .to(ticketId.toString())
-    .emit("ticket", {
-      action: "update",
-      ticket
-    });
+  io.emit("ticket", {
+    action: "update",
+    ticket
+  });
 
   return { ticket, oldStatus, oldUserId };
 };

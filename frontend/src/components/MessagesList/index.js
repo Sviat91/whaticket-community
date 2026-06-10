@@ -398,7 +398,10 @@ const MessagesList = ({ ticketId, isGroup, pendingMessages = [], onFromMeMessage
             setLoading(false);
 
             if (pageNumber === 1) {
-              messagesCache.set(String(ticketId), data.messages);
+              const prev = messagesCache.get(String(ticketId)) || [];
+              const apiIds = new Set(data.messages.map(m => m.id));
+              const socketOnly = prev.filter(m => !apiIds.has(m.id));
+              messagesCache.set(String(ticketId), [...data.messages, ...socketOnly]);
               if (messagesCache.size > CACHE_MAX_SIZE) {
                 messagesCache.delete(messagesCache.keys().next().value);
               }
@@ -410,7 +413,7 @@ const MessagesList = ({ ticketId, isGroup, pendingMessages = [], onFromMeMessage
         }
       };
       fetchMessages();
-    }, 500);
+    }, pageNumber === 1 ? 0 : 500);
     return () => {
       clearTimeout(delayDebounceFn);
     };
@@ -419,27 +422,21 @@ const MessagesList = ({ ticketId, isGroup, pendingMessages = [], onFromMeMessage
   useEffect(() => {
     const socket = openSocket();
 
-    socket.on("connect", () => socket.emit("joinChatBox", ticketId));
-
     socket.on('appMessage', (data) => {
+      if (String(data.message?.ticketId) !== String(ticketId)) return;
       if (data.action === 'create') {
         pendingScrollNewMsg.current = true;
         dispatch({ type: 'ADD_MESSAGE', payload: data.message });
         if (data.message.fromMe && onFromMeMessage) {
           onFromMeMessage();
         }
-        if (
-          String(data.message.ticketId) === String(ticketId) &&
-          document.visibilityState === 'visible'
-        ) {
+        if (document.visibilityState === 'visible') {
           api.put('/messages/' + ticketId).catch(() => {});
         }
-
-        const msgTicketKey = String(data.message.ticketId);
-        const cached = messagesCache.get(msgTicketKey);
+        const cached = messagesCache.get(String(ticketId));
         if (cached) {
           const exists = cached.some((m) => m.id === data.message.id);
-          if (!exists) messagesCache.set(msgTicketKey, [...cached, data.message]);
+          if (!exists) messagesCache.set(String(ticketId), [...cached, data.message]);
         }
       }
 

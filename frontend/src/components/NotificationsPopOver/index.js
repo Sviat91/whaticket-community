@@ -49,8 +49,6 @@ const NotificationsPopOver = () => {
 	useEffect(() => {
 		const socket = openSocket();
 
-		socket.on("connect", () => socket.emit("joinNotification"));
-
 		socket.on("ticket", data => {
 			if (data.action === "updateUnread" || data.action === "delete") {
 				setNotifications(prevState => {

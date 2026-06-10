@@ -68,7 +68,6 @@ const MainListItems = () => {
 			.catch(() => {});
 
 		const socket = openSocket();
-		socket.on("connect", () => socket.emit("joinNotification"));
 		socket.on("appMessage", data => {
 			if (data.action === "create" && !data.message.read)
 				setUnreadTicketIds(prev => new Set([...prev, data.ticket.id]));

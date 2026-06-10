@@ -66,7 +66,7 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
   const ticket = await CreateTicketService({ contactId, status, userId });
 
   const io = getIO();
-  io.to(ticket.status).emit("ticket", {
+  io.emit("ticket", {
     action: "update",
     ticket
   });
@@ -119,7 +119,7 @@ export const remove = async (
   const ticket = await DeleteTicketService(ticketId);
 
   const io = getIO();
-  io.to(ticket.status).to(ticketId).to("notification").emit("ticket", {
+  io.emit("ticket", {
     action: "delete",
     ticketId: +ticketId
   });

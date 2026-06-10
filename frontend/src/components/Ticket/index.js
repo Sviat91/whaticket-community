@@ -74,6 +74,9 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+const ticketCache = new Map();
+const TICKET_CACHE_MAX = 20;
+
 const Ticket = () => {
   const { ticketId } = useParams();
   const history = useHistory();
@@ -89,36 +92,44 @@ const Ticket = () => {
   const pendingRef = useRef([]);
 
   useEffect(() => {
-    setLoading(true);
-    const delayDebounceFn = setTimeout(() => {
-      const fetchTicket = async () => {
-        try {
-          const { data } = await api.get("/tickets/" + ticketId);
+    const cached = ticketCache.get(String(ticketId));
+    if (cached) {
+      setContact(cached.contact);
+      setTicket(cached.ticket);
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
 
-          setContact(data.contact);
-          setTicket(data);
-          setLoading(false);
-        } catch (err) {
-          setLoading(false);
-          toastError(err);
+    const fetchTicket = async () => {
+      try {
+        const { data } = await api.get('/tickets/' + ticketId);
+        ticketCache.set(String(ticketId), { contact: data.contact, ticket: data });
+        if (ticketCache.size > TICKET_CACHE_MAX) {
+          ticketCache.delete(ticketCache.keys().next().value);
         }
-      };
-      fetchTicket();
-    }, 500);
-    return () => clearTimeout(delayDebounceFn);
+        setContact(data.contact);
+        setTicket(data);
+        setLoading(false);
+      } catch (err) {
+        setLoading(false);
+        toastError(err);
+      }
+    };
+    fetchTicket();
   }, [ticketId, history]);
 
   useEffect(() => {
     const socket = openSocket();
 
-    socket.on("connect", () => socket.emit("joinChatBox", ticketId));
-
     socket.on("ticket", (data) => {
-      if (data.action === "update") {
+      if (data.action === "update" && String(data.ticket?.id) === String(ticketId)) {
         setTicket(data.ticket);
+        const prev = ticketCache.get(String(ticketId));
+        ticketCache.set(String(ticketId), { contact: data.ticket.contact || prev?.contact, ticket: data.ticket });
       }
 
-      if (data.action === "delete") {
+      if (data.action === "delete" && String(data.ticketId) === String(ticketId)) {
         toast.success("Ticket deleted sucessfully.");
         history.push("/tickets");
       }

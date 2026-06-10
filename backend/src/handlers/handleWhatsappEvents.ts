@@ -333,7 +333,7 @@ export const handleMessageAck = async (
 
     await messageToUpdate.update({ ack });
 
-    io.to(messageToUpdate.ticketId.toString()).emit("appMessage", {
+    io.emit("appMessage", {
       action: "update",
       message: messageToUpdate
     });

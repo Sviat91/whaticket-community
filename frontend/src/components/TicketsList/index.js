@@ -192,14 +192,6 @@ const reducer = (state, action) => {
 		const notBelongsToUserQueues = ticket =>
 			ticket.queueId && selectedQueueIds.indexOf(ticket.queueId) === -1;
 
-		socket.on("connect", () => {
-			if (status) {
-				socket.emit("joinTickets", status);
-			} else {
-				socket.emit("joinNotification");
-			}
-		});
-
 		socket.on("ticket", data => {
 			if (data.action === "updateUnread") {
 				dispatch({
