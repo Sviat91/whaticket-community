@@ -2,6 +2,7 @@ import { join } from "path";
 import { promisify } from "util";
 import { writeFile } from "fs";
 import * as Sentry from "@sentry/node";
+import { Op } from "sequelize";
 
 import { getIO } from "../libs/socket";
 import { logger } from "../utils/logger";
@@ -11,6 +12,8 @@ import formatBody from "../helpers/Mustache";
 import Contact from "../models/Contact";
 import Ticket from "../models/Ticket";
 import Message from "../models/Message";
+
+import SetTicketMessagesAsRead from "../helpers/SetTicketMessagesAsRead";
 
 import CreateMessageService from "../services/MessageServices/CreateMessageService";
 import CreateOrUpdateContactService from "../services/ContactServices/CreateOrUpdateContactService";
@@ -340,5 +343,28 @@ export const handleMessageAck = async (
   } catch (err) {
     Sentry.captureException(err);
     logger.error(`Error handling message ack: ${err}`);
+  }
+};
+
+export const checkExternallyReadTickets = async (wbot: any): Promise<void> => {
+  try {
+    const tickets = await Ticket.findAll({
+      where: { unreadMessages: { [Op.gt]: 0 }, status: "open" },
+      include: [{ model: Contact, as: "contact" }],
+    });
+
+    for (const ticket of tickets) {
+      try {
+        const chatId = `${(ticket as any).contact.number}@c.us`;
+        const chat = await wbot.getChatById(chatId);
+        if (chat && chat.unreadCount === 0) {
+          await SetTicketMessagesAsRead(ticket);
+        }
+      } catch {
+        // chat not found or error for this contact — skip
+      }
+    }
+  } catch (err) {
+    logger.error(`Error in checkExternallyReadTickets: ${err}`);
   }
 };

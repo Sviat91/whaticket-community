@@ -441,6 +441,10 @@ const MessagesList = ({ ticketId, isGroup, pendingMessages = [], onFromMeMessage
       }
       if (data.action === 'update') {
         dispatch({ type: 'UPDATE_MESSAGE', payload: data.message });
+        const cached = messagesCache.get(String(ticketId));
+        if (cached) {
+          messagesCache.set(String(ticketId), cached.map(m => m.id === data.message.id ? data.message : m));
+        }
       }
     };
     socket.on('appMessage', handleAppMessage);

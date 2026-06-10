@@ -24,6 +24,7 @@ import {
 import {
   handleMessage,
   handleMessageAck,
+  checkExternallyReadTickets,
   ContactPayload,
   MessagePayload,
   MediaPayload,
@@ -546,6 +547,9 @@ const init = async (whatsapp: Whatsapp): Promise<void> => {
 
         wbot.sendPresenceAvailable();
         await syncUnreadMessages(wbot);
+        setInterval(() => {
+          checkExternallyReadTickets(wbot).catch(() => {});
+        }, 30000);
       } catch (err) {
         logger.error(err, "Error on whatsapp ready event");
       }
