@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useHistory } from "react-router-dom";
-import openSocket, { disconnectSocket } from "../../services/socket-io";
+import openSocket, { disconnectSocket, reconnectSocket } from "../../services/socket-io";
 
 import { toast } from "react-toastify";
 
@@ -51,6 +51,13 @@ const useAuth = () => {
 				if (error?.response?.status === 403 && !originalRequest._retry) {
 					originalRequest._retry = true;
 
+					if (originalRequest.url?.includes("/auth/refresh_token")) {
+						localStorage.removeItem("token");
+						api.defaults.headers.Authorization = undefined;
+						setIsAuth(false);
+						return Promise.reject(error);
+					}
+
 					if (isRefreshing) {
 						return new Promise((resolve, reject) => {
 							failedQueue.push({ resolve, reject });
@@ -71,6 +78,7 @@ const useAuth = () => {
 							api.defaults.headers.Authorization = `Bearer ${data.token}`;
 							setUser(data.user);
 							processQueue(null, data.token);
+							reconnectSocket();
 						}
 						return api(originalRequest);
 					} catch (err) {
@@ -99,13 +107,21 @@ const useAuth = () => {
 		const token = localStorage.getItem("token");
 		(async () => {
 			if (token) {
+				isRefreshing = true;
 				try {
 					const { data } = await api.post("/auth/refresh_token");
+					localStorage.setItem("token", JSON.stringify(data.token));
 					api.defaults.headers.Authorization = `Bearer ${data.token}`;
 					setIsAuth(true);
 					setUser(data.user);
+					processQueue(null, data.token);
+					reconnectSocket();
 				} catch (err) {
+					processQueue(err, null);
+					localStorage.removeItem("token");
 					toastError(err);
+				} finally {
+					isRefreshing = false;
 				}
 			}
 			setLoading(false);

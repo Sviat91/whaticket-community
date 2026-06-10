@@ -21,4 +21,12 @@ export function disconnectSocket() {
   }
 }
 
+export function reconnectSocket() {
+  if (socket) {
+    socket.disconnect();
+    socket = null;
+  }
+  // connectToSocket() will pick up the new token from localStorage on next call
+}
+
 export default connectToSocket;
