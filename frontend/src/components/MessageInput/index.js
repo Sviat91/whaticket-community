@@ -10,13 +10,12 @@ import InputBase from "@material-ui/core/InputBase";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import { green } from "@material-ui/core/colors";
 import IconButton from "@material-ui/core/IconButton";
-import { Paperclip, MoreVertical, Smile, Send, XCircle, X, Mic, CheckCircle } from "lucide-react";
+import { Paperclip, MoreVertical, Smile, Send, XCircle, X, Mic, CheckCircle, PenLine } from "lucide-react";
 import {
-  FormControlLabel,
   Hidden,
   Menu,
   MenuItem,
-  Switch,
+  Tooltip,
 } from "@material-ui/core";
 import ClickAwayListener from "@material-ui/core/ClickAwayListener";
 
@@ -237,7 +236,7 @@ const MessageInput = ({ ticketStatus, droppedFiles = [], onDropHandled, onOptimi
     useContext(ReplyMessageContext);
   const { user } = useContext(AuthContext);
 
-  const [signMessage, setSignMessage] = useLocalStorage("signOption", true);
+  const [signMessage, setSignMessage] = useLocalStorage("signOption", false);
 
   useEffect(() => {
     inputRef.current.focus();
@@ -532,6 +531,21 @@ const MessageInput = ({ ticketStatus, droppedFiles = [], onDropHandled, onOptimi
                 <Paperclip size={20} />
               </IconButton>
             </label>
+            <Tooltip title={signMessage ? "Signature: on" : "Signature: off"} placement="top">
+              <span>
+                <IconButton
+                  aria-label="toggleSignMessage"
+                  component="span"
+                  disabled={loading || recording || ticketStatus !== "open"}
+                  onClick={() => setSignMessage(prev => !prev)}
+                >
+                  <PenLine
+                    size={20}
+                    style={{ color: signMessage ? "#25D366" : undefined }}
+                  />
+                </IconButton>
+              </span>
+            </Tooltip>
           </Hidden>
           <Hidden only={["md", "lg", "xl"]}>
             <IconButton
@@ -577,23 +591,17 @@ const MessageInput = ({ ticketStatus, droppedFiles = [], onDropHandled, onOptimi
                   </IconButton>
                 </label>
               </MenuItem>
-              <MenuItem onClick={handleMenuItemClick}>
-                <FormControlLabel
-                  style={{ marginRight: 7, color: "gray" }}
-                  label={i18n.t("messagesInput.signMessage")}
-                  labelPlacement="start"
-                  control={
-                    <Switch
-                      size="small"
-                      checked={signMessage}
-                      onChange={e => {
-                        setSignMessage(e.target.checked);
-                      }}
-                      name="showAllTickets"
-                      color="primary"
-                    />
-                  }
-                />
+              <MenuItem onClick={() => { setSignMessage(prev => !prev); handleMenuItemClick(); }}>
+                <IconButton
+                  aria-label="toggleSignMessage"
+                  component="span"
+                  disabled={loading || recording || ticketStatus !== "open"}
+                >
+                  <PenLine
+                    size={20}
+                    style={{ color: signMessage ? "#25D366" : undefined }}
+                  />
+                </IconButton>
               </MenuItem>
             </Menu>
           </Hidden>

@@ -140,7 +140,7 @@ const TicketListItem = ({ ticket }) => {
 								color="textSecondary"
 							>
 								{isMedia ? (
-									"📷 Медиа"
+									"📷 Media"
 								) : ticket.lastMessage ? (
 									<MarkdownWrapper>{ticket.lastMessage}</MarkdownWrapper>
 								) : (
