@@ -132,7 +132,7 @@ const Contacts = () => {
   useEffect(() => {
     const socket = openSocket();
 
-    socket.on("contact", (data) => {
+    const handleContact = (data) => {
       if (data.action === "update" || data.action === "create") {
         dispatch({ type: "UPDATE_CONTACTS", payload: data.contact });
       }
@@ -140,10 +140,12 @@ const Contacts = () => {
       if (data.action === "delete") {
         dispatch({ type: "DELETE_CONTACT", payload: +data.contactId });
       }
-    });
+    };
+
+    socket.on("contact", handleContact);
 
     return () => {
-      socket.disconnect();
+      socket.off("contact", handleContact);
     };
   }, []);
 

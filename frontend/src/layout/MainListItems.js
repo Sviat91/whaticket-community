@@ -68,19 +68,24 @@ const MainListItems = () => {
 			.catch(() => {});
 
 		const socket = openSocket();
-		socket.on("appMessage", data => {
+		const handleAppMessage = (data) => {
 			if (data.action === "create" && !data.message.read)
 				setUnreadTicketIds(prev => new Set([...prev, data.ticket.id]));
-		});
-		socket.on("ticket", data => {
+		};
+		const handleTicket = (data) => {
 			if (data.action === "updateUnread" || data.action === "delete")
 				setUnreadTicketIds(prev => {
 					const s = new Set(prev);
 					s.delete(data.ticketId);
 					return s;
 				});
-		});
-		return () => socket.disconnect();
+		};
+		socket.on("appMessage", handleAppMessage);
+		socket.on("ticket", handleTicket);
+		return () => {
+			socket.off("appMessage", handleAppMessage);
+			socket.off("ticket", handleTicket);
+		};
 	}, []);
 
 	useEffect(() => {

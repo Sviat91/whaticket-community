@@ -301,7 +301,7 @@ const reducer = (state, action) => {
   }
 
   if (action.type === "LOAD_MESSAGES") {
-    const messages = action.payload;
+    const { messages, appendToEnd } = action.payload;
     const newMessages = [];
 
     messages.forEach((message) => {
@@ -313,7 +313,7 @@ const reducer = (state, action) => {
       }
     });
 
-    return [...newMessages, ...state];
+    return appendToEnd ? [...state, ...newMessages] : [...newMessages, ...state];
   }
 
   if (action.type === "ADD_MESSAGE") {
@@ -390,10 +390,10 @@ const MessagesList = ({ ticketId, isGroup, pendingMessages = [], onFromMeMessage
           });
 
           if (currentTicketId.current === ticketId) {
-            if (pageNumber === 1 && data.messages.length > 0 && !hasCached) {
+            if (pageNumber === 1 && data.messages.length > 0) {
               pendingScrollRef.current = true;
             }
-            dispatch({ type: 'LOAD_MESSAGES', payload: data.messages });
+            dispatch({ type: 'LOAD_MESSAGES', payload: { messages: data.messages, appendToEnd: pageNumber === 1 } });
             setHasMore(data.hasMore);
             setLoading(false);
 
@@ -422,7 +422,7 @@ const MessagesList = ({ ticketId, isGroup, pendingMessages = [], onFromMeMessage
   useEffect(() => {
     const socket = openSocket();
 
-    socket.on('appMessage', (data) => {
+    const handleAppMessage = (data) => {
       if (String(data.message?.ticketId) !== String(ticketId)) return;
       if (data.action === 'create') {
         pendingScrollNewMsg.current = true;
@@ -439,14 +439,14 @@ const MessagesList = ({ ticketId, isGroup, pendingMessages = [], onFromMeMessage
           if (!exists) messagesCache.set(String(ticketId), [...cached, data.message]);
         }
       }
-
       if (data.action === 'update') {
         dispatch({ type: 'UPDATE_MESSAGE', payload: data.message });
       }
-    });
+    };
+    socket.on('appMessage', handleAppMessage);
 
     return () => {
-      socket.disconnect();
+      socket.off('appMessage', handleAppMessage);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ticketId]);

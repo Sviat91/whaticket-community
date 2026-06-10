@@ -124,7 +124,7 @@ const QuickAnswers = () => {
   useEffect(() => {
     const socket = openSocket();
 
-    socket.on("quickAnswer", (data) => {
+    const handleQuickAnswer = (data) => {
       if (data.action === "update" || data.action === "create") {
         dispatch({ type: "UPDATE_QUICK_ANSWERS", payload: data.quickAnswer });
       }
@@ -135,10 +135,12 @@ const QuickAnswers = () => {
           payload: +data.quickAnswerId,
         });
       }
-    });
+    };
+
+    socket.on("quickAnswer", handleQuickAnswer);
 
     return () => {
-      socket.disconnect();
+      socket.off("quickAnswer", handleQuickAnswer);
     };
   }, []);
 

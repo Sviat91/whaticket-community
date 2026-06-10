@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useHistory } from "react-router-dom";
-import openSocket from "../../services/socket-io";
+import openSocket, { disconnectSocket } from "../../services/socket-io";
 
 import { toast } from "react-toastify";
 
@@ -115,14 +115,15 @@ const useAuth = () => {
 	useEffect(() => {
 		const socket = openSocket();
 
-		socket.on("user", data => {
+		const handleUser = (data) => {
 			if (data.action === "update" && data.user.id === user.id) {
 				setUser(data.user);
 			}
-		});
+		};
+		socket.on("user", handleUser);
 
 		return () => {
-			socket.disconnect();
+			socket.off("user", handleUser);
 		};
 	}, [user]);
 
@@ -152,6 +153,7 @@ const useAuth = () => {
 			setIsAuth(false);
 			setUser({});
 			localStorage.removeItem("token");
+			disconnectSocket();
 			api.defaults.headers.Authorization = undefined;
 			setLoading(false);
 			history.push("/login");

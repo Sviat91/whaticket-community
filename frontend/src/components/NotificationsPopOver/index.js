@@ -49,7 +49,7 @@ const NotificationsPopOver = () => {
 	useEffect(() => {
 		const socket = openSocket();
 
-		socket.on("ticket", data => {
+		const handleTicket = (data) => {
 			if (data.action === "updateUnread" || data.action === "delete") {
 				setNotifications(prevState => {
 					const ticketIndex = prevState.findIndex(t => t.id === data.ticketId);
@@ -72,9 +72,8 @@ const NotificationsPopOver = () => {
 					return prevState;
 				});
 			}
-		});
-
-		socket.on("appMessage", data => {
+		};
+		const handleAppMessage = (data) => {
 			if (
 				data.action === "create" &&
 				!data.message.read &&
@@ -99,10 +98,14 @@ const NotificationsPopOver = () => {
 
 				handleNotifications(data);
 			}
-		});
+		};
+
+		socket.on("ticket", handleTicket);
+		socket.on("appMessage", handleAppMessage);
 
 		return () => {
-			socket.disconnect();
+			socket.off("ticket", handleTicket);
+			socket.off("appMessage", handleAppMessage);
 		};
 	}, [user]);
 

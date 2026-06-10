@@ -122,20 +122,18 @@ const Ticket = () => {
   useEffect(() => {
     const socket = openSocket();
 
-    socket.on("ticket", (data) => {
+    const handleTicket = (data) => {
       if (data.action === "update" && String(data.ticket?.id) === String(ticketId)) {
         setTicket(data.ticket);
         const prev = ticketCache.get(String(ticketId));
         ticketCache.set(String(ticketId), { contact: data.ticket.contact || prev?.contact, ticket: data.ticket });
       }
-
       if (data.action === "delete" && String(data.ticketId) === String(ticketId)) {
         toast.success("Ticket deleted sucessfully.");
         history.push("/tickets");
       }
-    });
-
-    socket.on("contact", (data) => {
+    };
+    const handleContact = (data) => {
       if (data.action === "update") {
         setContact((prevState) => {
           if (prevState.id === data.contact?.id) {
@@ -144,10 +142,13 @@ const Ticket = () => {
           return prevState;
         });
       }
-    });
+    };
+    socket.on("ticket", handleTicket);
+    socket.on("contact", handleContact);
 
     return () => {
-      socket.disconnect();
+      socket.off("ticket", handleTicket);
+      socket.off("contact", handleContact);
     };
   }, [ticketId, history]);
 

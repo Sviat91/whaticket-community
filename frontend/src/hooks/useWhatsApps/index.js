@@ -75,26 +75,32 @@ const useWhatsApps = () => {
 	useEffect(() => {
 		const socket = openSocket();
 
-		socket.on("whatsapp", data => {
+		const handleWhatsappUpdate = data => {
 			if (data.action === "update") {
 				dispatch({ type: "UPDATE_WHATSAPPS", payload: data.whatsapp });
 			}
-		});
+		};
 
-		socket.on("whatsapp", data => {
+		const handleWhatsappDelete = data => {
 			if (data.action === "delete") {
 				dispatch({ type: "DELETE_WHATSAPPS", payload: data.whatsappId });
 			}
-		});
+		};
 
-		socket.on("whatsappSession", data => {
+		const handleWhatsappSession = data => {
 			if (data.action === "update") {
 				dispatch({ type: "UPDATE_SESSION", payload: data.session });
 			}
-		});
+		};
+
+		socket.on("whatsapp", handleWhatsappUpdate);
+		socket.on("whatsapp", handleWhatsappDelete);
+		socket.on("whatsappSession", handleWhatsappSession);
 
 		return () => {
-			socket.disconnect();
+			socket.off("whatsapp", handleWhatsappUpdate);
+			socket.off("whatsapp", handleWhatsappDelete);
+			socket.off("whatsappSession", handleWhatsappSession);
 		};
 	}, []);
 

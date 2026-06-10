@@ -192,50 +192,51 @@ const reducer = (state, action) => {
 		const notBelongsToUserQueues = ticket =>
 			ticket.queueId && selectedQueueIds.indexOf(ticket.queueId) === -1;
 
-		socket.on("ticket", data => {
+		const handleTicket = (data) => {
 			if (data.action === "updateUnread") {
 				dispatch({
 					type: "RESET_UNREAD",
 					payload: data.ticketId,
 				});
 			}
-
 			if (data.action === "update" && shouldUpdateTicket(data.ticket)) {
 				dispatch({
 					type: "UPDATE_TICKET",
 					payload: data.ticket,
 				});
 			}
-
 			if (data.action === "update" && notBelongsToUserQueues(data.ticket)) {
 				dispatch({ type: "DELETE_TICKET", payload: data.ticket.id });
 			}
-
 			if (data.action === "delete") {
 				dispatch({ type: "DELETE_TICKET", payload: data.ticketId });
 			}
-		});
-
-		socket.on("appMessage", data => {
+		};
+		const handleAppMessage = (data) => {
 			if (data.action === "create" && shouldUpdateTicket(data.ticket)) {
 				dispatch({
 					type: "UPDATE_TICKET_UNREAD_MESSAGES",
 					payload: data.ticket,
 				});
 			}
-		});
-
-		socket.on("contact", data => {
+		};
+		const handleContact = (data) => {
 			if (data.action === "update") {
 				dispatch({
 					type: "UPDATE_TICKET_CONTACT",
 					payload: data.contact,
 				});
 			}
-		});
+		};
+
+		socket.on("ticket", handleTicket);
+		socket.on("appMessage", handleAppMessage);
+		socket.on("contact", handleContact);
 
 		return () => {
-			socket.disconnect();
+			socket.off("ticket", handleTicket);
+			socket.off("appMessage", handleAppMessage);
+			socket.off("contact", handleContact);
 		};
 	}, [status, searchParam, showAll, user, selectedQueueIds]);
 
