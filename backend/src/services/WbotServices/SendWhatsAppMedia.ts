@@ -1,5 +1,6 @@
 import fs from "fs";
 import AppError from "../../errors/AppError";
+import Message from "../../models/Message";
 import Ticket from "../../models/Ticket";
 import { whatsappProvider, ProviderMessage } from "../../providers/WhatsApp";
 
@@ -9,12 +10,14 @@ interface Request {
   media: Express.Multer.File;
   ticket: Ticket;
   body?: string;
+  quotedMsg?: Message;
 }
 
 const SendWhatsAppMedia = async ({
   media,
   ticket,
-  body
+  body,
+  quotedMsg
 }: Request): Promise<ProviderMessage> => {
   try {
     if (!ticket.whatsappId) {
@@ -38,7 +41,9 @@ const SendWhatsAppMedia = async ({
       sendAudioAsVoice: true,
       sendMediaAsDocument:
         media.mimetype.startsWith("image/") &&
-        !/^.*\.(jpe?g|png|gif)?$/i.exec(media.filename)
+        !/^.*\.(jpe?g|png|gif)?$/i.exec(media.filename),
+      quotedMessageId: quotedMsg?.id,
+      quotedMessageFromMe: quotedMsg?.fromMe
     };
 
     const sentMessage = await whatsappProvider.sendMedia(

@@ -352,6 +352,7 @@ const MessagesList = ({ ticketId, isGroup, pendingMessages = [], onFromMeMessage
   const [pageNumber, setPageNumber] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [reconnectKey, setReconnectKey] = useState(0);
   const lastMessageRef = useRef();
 
   const [selectedMessage, setSelectedMessage] = useState({});
@@ -377,6 +378,15 @@ const MessagesList = ({ ticketId, isGroup, pendingMessages = [], onFromMeMessage
       dispatch({ type: 'RESET' });
     }
   }, [ticketId]);
+
+  useEffect(() => {
+    const handleReconnected = () => {
+      setPageNumber(1);
+      setReconnectKey(k => k + 1);
+    };
+    window.addEventListener("socket-reconnected", handleReconnected);
+    return () => window.removeEventListener("socket-reconnected", handleReconnected);
+  }, []);
 
   useEffect(() => {
     const hasCached = pageNumber === 1 && messagesCache.has(String(ticketId));
@@ -417,7 +427,7 @@ const MessagesList = ({ ticketId, isGroup, pendingMessages = [], onFromMeMessage
     return () => {
       clearTimeout(delayDebounceFn);
     };
-  }, [pageNumber, ticketId]);
+  }, [pageNumber, ticketId, reconnectKey]);
 
   useEffect(() => {
     const socket = openSocket();

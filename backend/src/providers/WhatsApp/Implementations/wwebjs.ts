@@ -332,7 +332,15 @@ const sendMessage = async (
         Boolean(options?.quotedMessageFromMe),
         options?.quotedMessageId
       )
-    : "";
+    : undefined;
+
+  if (quotedMsgSerializedId) {
+    const inCache = await wbot.getMessageById(quotedMsgSerializedId);
+    if (!inCache) {
+      const chat = await wbot.getChatById(to);
+      await chat.fetchMessages({ limit: 50 });
+    }
+  }
 
   const sentMessage = await wbot.sendMessage(to, body, {
     quotedMessageId: quotedMsgSerializedId,
@@ -358,10 +366,26 @@ const sendMedia = async (
         media.filename
       );
 
+  const quotedMediaSerializedId = options?.quotedMessageId
+    ? getSerializedMessageId(
+        to,
+        Boolean(options?.quotedMessageFromMe),
+        options.quotedMessageId
+      )
+    : undefined;
+
+  if (quotedMediaSerializedId) {
+    const inCache = await wbot.getMessageById(quotedMediaSerializedId);
+    if (!inCache) {
+      const chat = await wbot.getChatById(to);
+      await chat.fetchMessages({ limit: 50 });
+    }
+  }
+
   const mediaOptions: MessageSendOptions = {
     caption: options?.caption,
     sendAudioAsVoice: options?.sendAudioAsVoice,
-    quotedMessageId: options?.quotedMessageId
+    quotedMessageId: quotedMediaSerializedId
   };
 
   if (

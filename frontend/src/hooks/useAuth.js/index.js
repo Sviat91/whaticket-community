@@ -11,6 +11,7 @@ import toastError from "../../errors/toastError";
 let isRefreshing = false;
 let failedQueue = [];
 let interceptorsRegistered = false;
+let refreshTimer = null;
 
 const processQueue = (error, token = null) => {
 	failedQueue.forEach(prom => {
@@ -18,6 +19,38 @@ const processQueue = (error, token = null) => {
 		else prom.resolve(token);
 	});
 	failedQueue = [];
+};
+
+const refreshAccessToken = async () => {
+	if (isRefreshing) return null;
+	isRefreshing = true;
+	try {
+		const { data } = await api.post("/auth/refresh_token");
+		localStorage.setItem("token", JSON.stringify(data.token));
+		api.defaults.headers.Authorization = `Bearer ${data.token}`;
+		processQueue(null, data.token);
+		reconnectSocket();
+		scheduleProactiveRefresh(data.token);
+		return data;
+	} catch (err) {
+		processQueue(err, null);
+		throw err;
+	} finally {
+		isRefreshing = false;
+	}
+};
+
+const scheduleProactiveRefresh = (jwt) => {
+	if (refreshTimer) clearTimeout(refreshTimer);
+	try {
+		const { exp } = JSON.parse(atob(jwt.split(".")[1]));
+		const delay = exp * 1000 - Date.now() - 60000; // 60s before expiry
+		refreshTimer = setTimeout(() => {
+			refreshAccessToken().catch(() => {});
+		}, Math.max(delay, 10000));
+	} catch (err) {
+		// malformed token — interceptor fallback will handle it
+	}
 };
 
 const useAuth = () => {
@@ -69,26 +102,26 @@ const useAuth = () => {
 							.catch(err => Promise.reject(err));
 					}
 
-					isRefreshing = true;
-
 					try {
-						const { data } = await api.post("/auth/refresh_token");
-						if (data) {
-							localStorage.setItem("token", JSON.stringify(data.token));
-							api.defaults.headers.Authorization = `Bearer ${data.token}`;
-							setUser(data.user);
-							processQueue(null, data.token);
-							reconnectSocket();
+						const data = await refreshAccessToken();
+						if (data === null) {
+							// already refreshing, wait in queue
+							return new Promise((resolve, reject) => {
+								failedQueue.push({ resolve, reject });
+							})
+								.then(token => {
+									originalRequest.headers["Authorization"] = `Bearer ${token}`;
+									return api(originalRequest);
+								})
+								.catch(err => Promise.reject(err));
 						}
+						setUser(data.user);
 						return api(originalRequest);
 					} catch (err) {
-						processQueue(err, null);
 						localStorage.removeItem("token");
 						api.defaults.headers.Authorization = undefined;
 						setIsAuth(false);
 						return Promise.reject(err);
-					} finally {
-						isRefreshing = false;
 					}
 				}
 
@@ -107,21 +140,15 @@ const useAuth = () => {
 		const token = localStorage.getItem("token");
 		(async () => {
 			if (token) {
-				isRefreshing = true;
 				try {
-					const { data } = await api.post("/auth/refresh_token");
-					localStorage.setItem("token", JSON.stringify(data.token));
-					api.defaults.headers.Authorization = `Bearer ${data.token}`;
-					setIsAuth(true);
-					setUser(data.user);
-					processQueue(null, data.token);
-					reconnectSocket();
+					const data = await refreshAccessToken();
+					if (data) {
+						setIsAuth(true);
+						setUser(data.user);
+					}
 				} catch (err) {
-					processQueue(err, null);
 					localStorage.removeItem("token");
 					toastError(err);
-				} finally {
-					isRefreshing = false;
 				}
 			}
 			setLoading(false);
@@ -143,6 +170,15 @@ const useAuth = () => {
 		};
 	}, [user]);
 
+	useEffect(() => {
+		const handleSocketAuthFailure = () => {
+			if (!localStorage.getItem("token")) return;
+			refreshAccessToken().catch(() => {});
+		};
+		window.addEventListener("socket-auth-failure", handleSocketAuthFailure);
+		return () => window.removeEventListener("socket-auth-failure", handleSocketAuthFailure);
+	}, []);
+
 	const handleLogin = async userData => {
 		setLoading(true);
 
@@ -152,6 +188,8 @@ const useAuth = () => {
 			api.defaults.headers.Authorization = `Bearer ${data.token}`;
 			setUser(data.user);
 			setIsAuth(true);
+			scheduleProactiveRefresh(data.token);
+			reconnectSocket();
 			toast.success(i18n.t("auth.toasts.success"));
 			history.push("/tickets");
 			setLoading(false);
@@ -165,6 +203,7 @@ const useAuth = () => {
 		setLoading(true);
 
 		try {
+			if (refreshTimer) clearTimeout(refreshTimer);
 			await api.delete("/auth/logout");
 			setIsAuth(false);
 			setUser({});

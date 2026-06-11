@@ -5,20 +5,19 @@ import openSocket from "../../services/socket-io";
 import useSound from "use-sound";
 
 import { i18n } from "../../translate/i18n";
-import useTickets from "../../hooks/useTickets";
 import alertSound from "../../assets/sound.mp3";
 import { AuthContext } from "../../context/Auth/AuthContext";
+import { UnreadContext } from "../../context/Unread/UnreadContext";
 import { updateFavicon } from "../../utils/favicon";
 
 const NotificationsPopOver = () => {
 	const history = useHistory();
 	const { user } = useContext(AuthContext);
+	const { unreadCount } = useContext(UnreadContext);
 	const ticketIdUrl = +history.location.pathname.split("/")[2];
 	const ticketIdRef = useRef(ticketIdUrl);
-	const [notifications, setNotifications] = useState([]);
 	const [, setDesktopNotifications] = useState([]);
 
-	const { tickets } = useTickets({ withUnreadMessages: "true" });
 	const [play] = useSound(alertSound);
 	const soundAlertRef = useRef();
 	const historyRef = useRef(history);
@@ -33,33 +32,19 @@ const NotificationsPopOver = () => {
 	}, [play]);
 
 	useEffect(() => {
-		setNotifications(tickets);
-	}, [tickets]);
-
-	useEffect(() => {
 		ticketIdRef.current = ticketIdUrl;
 	}, [ticketIdUrl]);
 
 	useEffect(() => {
-		const count = notifications.length;
-		document.title = count > 0 ? `(${count}) AVS-Chats` : "AVS-Chats";
-		updateFavicon(count);
-	}, [notifications.length]);
+		document.title = unreadCount > 0 ? `(${unreadCount}) AVS-Chats` : "AVS-Chats";
+		updateFavicon(unreadCount);
+	}, [unreadCount]);
 
 	useEffect(() => {
 		const socket = openSocket();
 
 		const handleTicket = (data) => {
 			if (data.action === "updateUnread" || data.action === "delete") {
-				setNotifications(prevState => {
-					const ticketIndex = prevState.findIndex(t => t.id === data.ticketId);
-					if (ticketIndex !== -1) {
-						prevState.splice(ticketIndex, 1);
-						return [...prevState];
-					}
-					return prevState;
-				});
-
 				setDesktopNotifications(prevState => {
 					const notfiticationIndex = prevState.findIndex(
 						n => n.tag === String(data.ticketId)
@@ -79,15 +64,6 @@ const NotificationsPopOver = () => {
 				!data.message.read &&
 				(data.ticket.userId === user?.id || !data.ticket.userId)
 			) {
-				setNotifications(prevState => {
-					const ticketIndex = prevState.findIndex(t => t.id === data.ticket.id);
-					if (ticketIndex !== -1) {
-						prevState[ticketIndex] = data.ticket;
-						return [...prevState];
-					}
-					return [data.ticket, ...prevState];
-				});
-
 				const shouldNotNotificate =
 					(data.message.ticketId === ticketIdRef.current &&
 						document.visibilityState === "visible") ||

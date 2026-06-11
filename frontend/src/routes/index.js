@@ -14,6 +14,7 @@ import QuickAnswers from "../pages/QuickAnswers/";
 import Queues from "../pages/Queues/";
 import { AuthProvider } from "../context/Auth/AuthContext";
 import { WhatsAppsProvider } from "../context/WhatsApp/WhatsAppsContext";
+import { UnreadProvider } from "../context/Unread/UnreadContext";
 import { ThemeProvider } from "../context/DarkMode";
 import Route from "./Route";
 
@@ -26,6 +27,7 @@ const Routes = () => {
             <Route exact path="/login" component={Login} />
             <Route exact path="/signup" component={Signup} />
             <WhatsAppsProvider>
+              <UnreadProvider>
               <LoggedInLayout>
                 <Route exact path="/" render={() => <Redirect to="/tickets" />} isPrivate />
                 <Route exact path="/tickets/:ticketId?" component={Tickets} isPrivate />
@@ -36,6 +38,7 @@ const Routes = () => {
                 <Route exact path="/Settings" component={Settings} isPrivate />
                 <Route exact path="/Queues" component={Queues} isPrivate />
               </LoggedInLayout>
+              </UnreadProvider>
             </WhatsAppsProvider>
           </Switch>
           <ToastContainer autoClose={3000} />

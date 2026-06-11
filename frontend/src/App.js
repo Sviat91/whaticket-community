@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import Routes from "./routes";
 import "react-toastify/dist/ReactToastify.css";
+import "./index.css";
 
 const App = () => {
   useEffect(() => {

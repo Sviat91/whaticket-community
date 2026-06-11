@@ -37,8 +37,13 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
 
 export const store = async (req: Request, res: Response): Promise<Response> => {
   const { ticketId } = req.params;
-  const { body, quotedMsg }: MessageData = req.body;
+  const { body }: MessageData = req.body;
   const medias = req.files as Express.Multer.File[];
+
+  const rawQuotedMsg = req.body.quotedMsg;
+  const quotedMsg: Message | undefined = rawQuotedMsg
+    ? (typeof rawQuotedMsg === "string" ? JSON.parse(rawQuotedMsg) : rawQuotedMsg)
+    : undefined;
 
   const ticket = await ShowTicketService(ticketId);
 
@@ -47,7 +52,7 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
   if (medias) {
     await Promise.all(
       medias.map(async (media: Express.Multer.File) => {
-        await SendWhatsAppMedia({ media, ticket, body });
+        await SendWhatsAppMedia({ media, ticket, body, quotedMsg });
       })
     );
   } else {

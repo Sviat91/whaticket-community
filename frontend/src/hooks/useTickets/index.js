@@ -17,6 +17,13 @@ const useTickets = ({
     const [hasMore, setHasMore] = useState(false);
     const [tickets, setTickets] = useState([]);
     const [count, setCount] = useState(0);
+    const [reconnectKey, setReconnectKey] = useState(0);
+
+    useEffect(() => {
+        const handleReconnected = () => setReconnectKey(k => k + 1);
+        window.addEventListener("socket-reconnected", handleReconnected);
+        return () => window.removeEventListener("socket-reconnected", handleReconnected);
+    }, []);
 
     useEffect(() => {
         setLoading(true);
@@ -80,6 +87,7 @@ const useTickets = ({
         showAll,
         queueIds,
         withUnreadMessages,
+        reconnectKey,
     ])
 
     return { tickets, loading, hasMore, count };

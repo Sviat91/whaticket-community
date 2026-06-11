@@ -7,9 +7,8 @@ import { ArrowLeftRight, Users, MessageSquare, UserCog, Settings } from "lucide-
 import { i18n } from "../translate/i18n";
 import { WhatsAppsContext } from "../context/WhatsApp/WhatsAppsContext";
 import { AuthContext } from "../context/Auth/AuthContext";
+import { UnreadContext } from "../context/Unread/UnreadContext";
 import { Can } from "../components/Can";
-import openSocket from "../services/socket-io";
-import api from "../services/api";
 
 const useNavStyles = makeStyles((theme) => ({
 	btn: {
@@ -59,34 +58,8 @@ const MainListItems = () => {
 	const classes = useNavStyles();
 	const { whatsApps } = useContext(WhatsAppsContext);
 	const { user } = useContext(AuthContext);
+	const { unreadCount } = useContext(UnreadContext);
 	const [connectionWarning, setConnectionWarning] = useState(false);
-	const [unreadTicketIds, setUnreadTicketIds] = useState(new Set());
-
-	useEffect(() => {
-		api.get("/tickets", { params: { withUnreadMessages: "true" } })
-			.then(({ data }) => setUnreadTicketIds(new Set(data.tickets.map(t => t.id))))
-			.catch(() => {});
-
-		const socket = openSocket();
-		const handleAppMessage = (data) => {
-			if (data.action === "create" && !data.message.read)
-				setUnreadTicketIds(prev => new Set([...prev, data.ticket.id]));
-		};
-		const handleTicket = (data) => {
-			if (data.action === "updateUnread" || data.action === "delete")
-				setUnreadTicketIds(prev => {
-					const s = new Set(prev);
-					s.delete(data.ticketId);
-					return s;
-				});
-		};
-		socket.on("appMessage", handleAppMessage);
-		socket.on("ticket", handleTicket);
-		return () => {
-			socket.off("appMessage", handleAppMessage);
-			socket.off("ticket", handleTicket);
-		};
-	}, []);
 
 	useEffect(() => {
 		const timer = setTimeout(() => {
@@ -115,7 +88,7 @@ const MainListItems = () => {
 				to="/tickets"
 				title="Chats"
 				icon={
-					<Badge badgeContent={unreadTicketIds.size} color="secondary" max={99}>
+					<Badge badgeContent={unreadCount} color="secondary" max={99}>
 						<WhatsAppIcon fontSize="small" />
 					</Badge>
 				}

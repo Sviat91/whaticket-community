@@ -292,6 +292,7 @@ const MessageInput = ({ ticketStatus, droppedFiles = [], onDropHandled, onOptimi
 
   const handleSendMessage = async () => {
     if (inputMessage.trim() === "" && medias.length === 0) return;
+    const quotedMsgSnapshot = replyingMessage;
     setLoading(true);
 
     try {
@@ -311,6 +312,9 @@ const MessageInput = ({ ticketStatus, droppedFiles = [], onDropHandled, onOptimi
         formData.append("fromMe", true);
         medias.forEach(media => formData.append("medias", media));
         formData.append("body", inputMessage.trim());
+        if (quotedMsgSnapshot) {
+          formData.append("quotedMsg", JSON.stringify(quotedMsgSnapshot));
+        }
 
         // Clear UI immediately
         setInputMessage("");

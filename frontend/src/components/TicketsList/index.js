@@ -165,6 +165,15 @@ const reducer = (state, action) => {
 		setPageNumber(1);
 	}, [status, searchParam, dispatch, showAll, selectedQueueIds, withUnreadMessages]);
 
+	useEffect(() => {
+		const handleReconnected = () => {
+			dispatch({ type: "RESET" });
+			setPageNumber(1);
+		};
+		window.addEventListener("socket-reconnected", handleReconnected);
+		return () => window.removeEventListener("socket-reconnected", handleReconnected);
+	}, []);
+
 	const { tickets, hasMore, loading } = useTickets({
 		pageNumber,
 		searchParam,

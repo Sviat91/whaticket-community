@@ -294,6 +294,11 @@ export const handleMessage = async (
 
     await ticket.update({ lastMessage: lastMessageText });
 
+    const existing = await Message.findByPk(processedMessage.id);
+    if (existing && existing.ack > messageData.ack) {
+      messageData.ack = existing.ack;
+    }
+
     await CreateMessageService({ messageData });
 
     await processVcardMessage(processedMessage);
@@ -314,23 +319,31 @@ export const handleMessageAck = async (
   messageId: string,
   ack: MessageAck
 ): Promise<void> => {
-  await new Promise(r => setTimeout(r, 500));
-
   const io = getIO();
 
   try {
-    const messageToUpdate = await Message.findByPk(messageId, {
-      include: [
-        "contact",
-        {
-          model: Message,
-          as: "quotedMsg",
-          include: ["contact"]
-        }
-      ]
-    });
+    let messageToUpdate = null;
+
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      messageToUpdate = await Message.findByPk(messageId, {
+        include: [
+          "contact",
+          {
+            model: Message,
+            as: "quotedMsg",
+            include: ["contact"]
+          }
+        ]
+      });
+      if (messageToUpdate) break;
+      if (attempt < 9) await new Promise(r => setTimeout(r, 1000));
+    }
 
     if (!messageToUpdate) {
+      return;
+    }
+
+    if (messageToUpdate.ack >= ack) {
       return;
     }
 
@@ -355,7 +368,7 @@ export const checkExternallyReadTickets = async (wbot: any): Promise<void> => {
 
     for (const ticket of tickets) {
       try {
-        const chatId = `${(ticket as any).contact.number}@c.us`;
+        const chatId = `${(ticket as any).contact.number}@${(ticket as any).isGroup ? "g" : "c"}.us`;
         const chat = await wbot.getChatById(chatId);
         if (chat && chat.unreadCount === 0) {
           await SetTicketMessagesAsRead(ticket);
