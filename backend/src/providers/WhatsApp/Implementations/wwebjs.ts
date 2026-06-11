@@ -326,24 +326,29 @@ const sendMessage = async (
 ): Promise<ProviderMessage> => {
   const wbot = getWbot(sessionId);
 
-  const quotedMsgSerializedId = options?.quotedMessageId
-    ? getSerializedMessageId(
-        to,
-        Boolean(options?.quotedMessageFromMe),
-        options?.quotedMessageId
-      )
-    : undefined;
-
-  if (quotedMsgSerializedId) {
-    const inCache = await wbot.getMessageById(quotedMsgSerializedId);
-    if (!inCache) {
+  let resolvedQuotedId: string | undefined;
+  if (options?.quotedMessageId) {
+    const constructed = getSerializedMessageId(
+      to,
+      Boolean(options.quotedMessageFromMe),
+      options.quotedMessageId
+    );
+    let cached: WbotMessage | null = await wbot.getMessageById(constructed);
+    if (!cached) {
       const chat = await wbot.getChatById(to);
-      await chat.fetchMessages({ limit: 50 });
+      const msgs = await chat.fetchMessages({ limit: 50 });
+      cached = msgs.find(m => m.id.id === options.quotedMessageId) ?? null;
+    }
+    if (cached) {
+      resolvedQuotedId = cached.id._serialized;
+      logger.info(`[reply] resolved quotedId for text: ${resolvedQuotedId}`);
+    } else {
+      logger.warn(`[reply] quoted message not found for text: ${options.quotedMessageId}`);
     }
   }
 
   const sentMessage = await wbot.sendMessage(to, body, {
-    quotedMessageId: quotedMsgSerializedId,
+    quotedMessageId: resolvedQuotedId,
     linkPreview: options?.linkPreview
   });
 
@@ -366,26 +371,31 @@ const sendMedia = async (
         media.filename
       );
 
-  const quotedMediaSerializedId = options?.quotedMessageId
-    ? getSerializedMessageId(
-        to,
-        Boolean(options?.quotedMessageFromMe),
-        options.quotedMessageId
-      )
-    : undefined;
-
-  if (quotedMediaSerializedId) {
-    const inCache = await wbot.getMessageById(quotedMediaSerializedId);
-    if (!inCache) {
+  let resolvedQuotedMediaId: string | undefined;
+  if (options?.quotedMessageId) {
+    const constructed = getSerializedMessageId(
+      to,
+      Boolean(options.quotedMessageFromMe),
+      options.quotedMessageId
+    );
+    let cached: WbotMessage | null = await wbot.getMessageById(constructed);
+    if (!cached) {
       const chat = await wbot.getChatById(to);
-      await chat.fetchMessages({ limit: 50 });
+      const msgs = await chat.fetchMessages({ limit: 50 });
+      cached = msgs.find(m => m.id.id === options.quotedMessageId) ?? null;
+    }
+    if (cached) {
+      resolvedQuotedMediaId = cached.id._serialized;
+      logger.info(`[reply] resolved quotedId for media: ${resolvedQuotedMediaId}`);
+    } else {
+      logger.warn(`[reply] quoted message not found for media: ${options.quotedMessageId}`);
     }
   }
 
   const mediaOptions: MessageSendOptions = {
     caption: options?.caption,
     sendAudioAsVoice: options?.sendAudioAsVoice,
-    quotedMessageId: quotedMediaSerializedId
+    quotedMessageId: resolvedQuotedMediaId
   };
 
   if (
