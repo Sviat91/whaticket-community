@@ -675,7 +675,28 @@ const MessagesList = ({ ticketId, isGroup, pendingMessages = [], onFromMeMessage
               {message.quotedMsg?.contact?.name}
             </span>
           )}
-          {message.quotedMsg?.body}
+          {message.quotedMsg?.mediaUrl ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              {message.quotedMsg.mediaType === "image" && (
+                <img
+                  src={message.quotedMsg.mediaUrl}
+                  alt=""
+                  style={{ width: 48, height: 48, objectFit: "cover", borderRadius: 4, flexShrink: 0 }}
+                />
+              )}
+              <span style={{ opacity: 0.8, fontSize: "0.85em" }}>
+                {message.quotedMsg.mediaType === "image"
+                  ? message.quotedMsg.body || "Photo"
+                  : message.quotedMsg.mediaType === "audio"
+                  ? "Audio"
+                  : message.quotedMsg.mediaType === "video"
+                  ? "Video"
+                  : message.quotedMsg.body || "Document"}
+              </span>
+            </div>
+          ) : (
+            message.quotedMsg?.body
+          )}
         </div>
       </div>
     );

@@ -446,7 +446,28 @@ const MessageInput = ({ ticketStatus, droppedFiles = [], onDropHandled, onOptimi
                 {message.contact?.name}
               </span>
             )}
-            {message.body}
+            {message.mediaUrl ? (
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                {message.mediaType === "image" && (
+                  <img
+                    src={message.mediaUrl}
+                    alt=""
+                    style={{ width: 48, height: 48, objectFit: "cover", borderRadius: 4, flexShrink: 0 }}
+                  />
+                )}
+                <span style={{ opacity: 0.8, fontSize: "0.85em" }}>
+                  {message.mediaType === "image"
+                    ? message.body || "Photo"
+                    : message.mediaType === "audio"
+                    ? "Audio"
+                    : message.mediaType === "video"
+                    ? "Video"
+                    : message.body || "Document"}
+                </span>
+              </div>
+            ) : (
+              message.body
+            )}
           </div>
         </div>
         <IconButton
