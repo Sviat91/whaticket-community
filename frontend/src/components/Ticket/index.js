@@ -238,6 +238,7 @@ const Ticket = () => {
         </TicketHeader>
         <ReplyMessageProvider>
           <MessagesList
+            key={ticketId}
             ticketId={ticketId}
             isGroup={ticket.isGroup}
             pendingMessages={pendingMessages}

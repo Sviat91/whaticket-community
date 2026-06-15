@@ -295,9 +295,19 @@ const useStyles = makeStyles((theme) => ({
 const messagesCache = new Map();
 const CACHE_MAX_SIZE = 20;
 
+const sortMessages = (list) => {
+  const byId = new Map();
+  for (const m of list) byId.set(m.id, m);            // dedup by id, last wins
+  return Array.from(byId.values()).sort((a, b) => {
+    if (a.createdAt < b.createdAt) return -1;          // ISO 8601 strings sort chronologically
+    if (a.createdAt > b.createdAt) return 1;
+    return String(a.id).localeCompare(String(b.id));   // stable tiebreak
+  });
+};
+
 const reducer = (state, action) => {
   if (action.type === 'RESTORE_CACHE') {
-    return [...action.payload];
+    return sortMessages([...action.payload]);
   }
 
   if (action.type === "LOAD_MESSAGES") {
@@ -313,7 +323,7 @@ const reducer = (state, action) => {
       }
     });
 
-    return appendToEnd ? [...state, ...newMessages] : [...newMessages, ...state];
+    return sortMessages(appendToEnd ? [...state, ...newMessages] : [...newMessages, ...state]);
   }
 
   if (action.type === "ADD_MESSAGE") {
@@ -326,7 +336,7 @@ const reducer = (state, action) => {
       state.push(newMessage);
     }
 
-    return [...state];
+    return sortMessages([...state]);
   }
 
   if (action.type === "UPDATE_MESSAGE") {
@@ -337,7 +347,7 @@ const reducer = (state, action) => {
       state[messageIndex] = messageToUpdate;
     }
 
-    return [...state];
+    return sortMessages([...state]);
   }
 
   if (action.type === "RESET") {
@@ -411,7 +421,7 @@ const MessagesList = ({ ticketId, isGroup, pendingMessages = [], onFromMeMessage
               const prev = messagesCache.get(String(ticketId)) || [];
               const apiIds = new Set(data.messages.map(m => m.id));
               const socketOnly = prev.filter(m => !apiIds.has(m.id));
-              messagesCache.set(String(ticketId), [...data.messages, ...socketOnly]);
+              messagesCache.set(String(ticketId), sortMessages([...data.messages, ...socketOnly]));
               if (messagesCache.size > CACHE_MAX_SIZE) {
                 messagesCache.delete(messagesCache.keys().next().value);
               }
@@ -446,14 +456,14 @@ const MessagesList = ({ ticketId, isGroup, pendingMessages = [], onFromMeMessage
         const cached = messagesCache.get(String(ticketId));
         if (cached) {
           const exists = cached.some((m) => m.id === data.message.id);
-          if (!exists) messagesCache.set(String(ticketId), [...cached, data.message]);
+          if (!exists) messagesCache.set(String(ticketId), sortMessages([...cached, data.message]));
         }
       }
       if (data.action === 'update') {
         dispatch({ type: 'UPDATE_MESSAGE', payload: data.message });
         const cached = messagesCache.get(String(ticketId));
         if (cached) {
-          messagesCache.set(String(ticketId), cached.map(m => m.id === data.message.id ? data.message : m));
+          messagesCache.set(String(ticketId), sortMessages(cached.map(m => m.id === data.message.id ? data.message : m)));
         }
       }
     };
