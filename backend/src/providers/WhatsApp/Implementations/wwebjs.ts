@@ -234,9 +234,21 @@ const getMessageData = async (
     msgContact = await msg.getContact();
   }
 
-  const chat = await msg.getChat();
+  let chat: Awaited<ReturnType<typeof msg.getChat>> | null = null;
+  try {
+    chat = await msg.getChat();
+  } catch (err) {
+    logger.warn(
+      err,
+      "Could not fetch chat for message, falling back to message metadata"
+    );
+  }
 
-  if (chat.isGroup) {
+  const isGroup = chat
+    ? chat.isGroup
+    : Boolean((msg.id as { remote?: string }).remote?.endsWith("@g.us"));
+
+  if (isGroup) {
     let msgGroupContact;
 
     if (msg.fromMe) {
@@ -248,7 +260,7 @@ const getMessageData = async (
     groupContact = await convertToContactPayload(msgGroupContact);
   }
 
-  const unreadMessages = msg.fromMe ? 0 : chat.unreadCount;
+  const unreadMessages = msg.fromMe ? 0 : (chat?.unreadCount ?? 1);
 
   const contactPayload = await convertToContactPayload(msgContact);
   const messagePayload = await convertToMessagePayload(msg);
@@ -335,9 +347,16 @@ const sendMessage = async (
     );
     let cached: WbotMessage | null = await wbot.getMessageById(constructed);
     if (!cached) {
-      const chat = await wbot.getChatById(to);
-      const msgs = await chat.fetchMessages({ limit: 50 });
-      cached = msgs.find(m => m.id.id === options.quotedMessageId) ?? null;
+      try {
+        const chat = await wbot.getChatById(to);
+        const msgs = await chat.fetchMessages({ limit: 50 });
+        cached = msgs.find(m => m.id.id === options.quotedMessageId) ?? null;
+      } catch (err) {
+        logger.warn(
+          err,
+          `[reply] could not fetch chat history to resolve quotedId for text: ${options.quotedMessageId}`
+        );
+      }
     }
     if (cached) {
       resolvedQuotedId = cached.id._serialized;
@@ -380,9 +399,16 @@ const sendMedia = async (
     );
     let cached: WbotMessage | null = await wbot.getMessageById(constructed);
     if (!cached) {
-      const chat = await wbot.getChatById(to);
-      const msgs = await chat.fetchMessages({ limit: 50 });
-      cached = msgs.find(m => m.id.id === options.quotedMessageId) ?? null;
+      try {
+        const chat = await wbot.getChatById(to);
+        const msgs = await chat.fetchMessages({ limit: 50 });
+        cached = msgs.find(m => m.id.id === options.quotedMessageId) ?? null;
+      } catch (err) {
+        logger.warn(
+          err,
+          `[reply] could not fetch chat history to resolve quotedId for media: ${options.quotedMessageId}`
+        );
+      }
     }
     if (cached) {
       resolvedQuotedMediaId = cached.id._serialized;
