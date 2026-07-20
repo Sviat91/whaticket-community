@@ -132,9 +132,13 @@ export const update = async (
     throw new AppError(err.message);
   }
 
-  await CheckIsValidContact(contactData.number);
-
   const { contactId } = req.params;
+
+  const existingContact = await ShowContactService(contactId);
+
+  if (contactData.number && contactData.number !== existingContact.number) {
+    await CheckIsValidContact(contactData.number);
+  }
 
   const contact = await UpdateContactService({ contactData, contactId });
 
