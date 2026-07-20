@@ -24,6 +24,14 @@ const emitContact = (action: "update" | "create", contact: Contact) => {
   io.emit("contact", { action, contact });
 };
 
+const isBareNumber = (value: string): boolean =>
+  /^\+?[0-9\s()-]+$/.test(value.trim());
+
+const resolveName = (incoming: string, existing?: string | null): string => {
+  if (incoming && !isBareNumber(incoming)) return incoming;
+  return existing || incoming;
+};
+
 const CreateOrUpdateContactService = async ({
   name,
   number: rawNumber,
@@ -53,7 +61,7 @@ const CreateOrUpdateContactService = async ({
     await contactByLid.destroy();
 
     await contactByNumber.update({
-      name: name || contactByNumber.name,
+      name: resolveName(name, contactByNumber.name),
       lid: contactByLid.lid,
       profilePicUrl
     });
@@ -71,7 +79,7 @@ const CreateOrUpdateContactService = async ({
 
   if (contactByNumber) {
     await contactByNumber.update({
-      name: name || contactByNumber.name,
+      name: resolveName(name, contactByNumber.name),
       lid: lid || contactByNumber.lid,
       profilePicUrl
     });
@@ -83,7 +91,7 @@ const CreateOrUpdateContactService = async ({
 
   if (contactByLid) {
     await contactByLid.update({
-      name: name || contactByLid.name,
+      name: resolveName(name, contactByLid.name),
       number: number || contactByLid.number,
       profilePicUrl
     });
