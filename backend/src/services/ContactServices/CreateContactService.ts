@@ -12,13 +12,15 @@ interface Request {
   email?: string;
   profilePicUrl?: string;
   extraInfo?: ExtraInfo[];
+  nameLocked?: boolean;
 }
 
 const CreateContactService = async ({
   name,
   number,
   email = "",
-  extraInfo = []
+  extraInfo = [],
+  nameLocked = false
 }: Request): Promise<Contact> => {
   const numberExists = await Contact.findOne({
     where: { number }
@@ -33,7 +35,8 @@ const CreateContactService = async ({
       name,
       number,
       email,
-      extraInfo
+      extraInfo,
+      nameLocked
     },
     {
       include: ["extraInfo"]

@@ -27,7 +27,14 @@ const UpdateContactService = async ({
 
   const contact = await Contact.findOne({
     where: { id: contactId },
-    attributes: ["id", "name", "number", "email", "profilePicUrl"],
+    attributes: [
+      "id",
+      "name",
+      "number",
+      "email",
+      "profilePicUrl",
+      "nameLocked"
+    ],
     include: ["extraInfo"]
   });
 
@@ -53,14 +60,21 @@ const UpdateContactService = async ({
     );
   }
 
-  await contact.update({
-    name,
-    number,
-    email
-  });
+  const updatePayload: Partial<Contact> = { name, number, email };
+  if (name && name !== contact.name) {
+    updatePayload.nameLocked = true;
+  }
+  await contact.update(updatePayload);
 
   await contact.reload({
-    attributes: ["id", "name", "number", "email", "profilePicUrl"],
+    attributes: [
+      "id",
+      "name",
+      "number",
+      "email",
+      "profilePicUrl",
+      "nameLocked"
+    ],
     include: ["extraInfo"]
   });
 
