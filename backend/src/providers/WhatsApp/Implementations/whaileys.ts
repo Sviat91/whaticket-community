@@ -931,7 +931,8 @@ const init = async (whatsapp: Whatsapp): Promise<void> => {
         })
       )
     },
-    shouldSyncHistoryMessage: () => false,
+    shouldSyncHistoryMessage: msg =>
+      msg.syncType === proto.Message.HistorySyncType.PUSH_NAME,
     shouldIgnoreJid: jid => {
       if (typeof jid !== "string") return false;
       return (
