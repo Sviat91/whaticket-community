@@ -30,6 +30,7 @@ const SendWhatsAppMessage = async ({
       {
         quotedMessageId: quotedMsg?.id,
         quotedMessageFromMe: quotedMsg?.fromMe,
+        quotedMessageBody: quotedMsg?.body,
         linkPreview: false
       }
     );

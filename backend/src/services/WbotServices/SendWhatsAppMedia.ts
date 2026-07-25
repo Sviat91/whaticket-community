@@ -43,7 +43,8 @@ const SendWhatsAppMedia = async ({
         media.mimetype.startsWith("image/") &&
         !/^.*\.(jpe?g|png|gif)?$/i.exec(media.filename),
       quotedMessageId: quotedMsg?.id,
-      quotedMessageFromMe: quotedMsg?.fromMe
+      quotedMessageFromMe: quotedMsg?.fromMe,
+      quotedMessageBody: quotedMsg?.body
     };
 
     const sentMessage = await whatsappProvider.sendMedia(

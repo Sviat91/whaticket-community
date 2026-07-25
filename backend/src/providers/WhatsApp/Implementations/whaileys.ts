@@ -1249,17 +1249,24 @@ const sendMessage = async (
   const wbot = getWbot(sessionId);
   const toJid = normalizeJid(to);
 
-  const messageContent: AnyMessageContent = options?.quotedMessageId
-    ? {
-        text: body,
-        contextInfo: {
-          stanzaId: options.quotedMessageId,
-          participant: options.quotedMessageFromMe ? wbot.user?.id : toJid
-        }
-      }
-    : { text: body };
+  const messageContent: AnyMessageContent = { text: body };
 
-  const sentMsg = await wbot.sendMessage(toJid, messageContent);
+  const quoted = options?.quotedMessageId
+    ? {
+        key: {
+          remoteJid: toJid,
+          fromMe: Boolean(options.quotedMessageFromMe),
+          id: options.quotedMessageId
+        },
+        message: { conversation: options.quotedMessageBody || "" }
+      }
+    : undefined;
+
+  const sentMsg = await wbot.sendMessage(
+    toJid,
+    messageContent,
+    quoted ? { quoted } : undefined
+  );
 
   if (!sentMsg?.key.id) {
     throw new AppError("ERR_SENDING_WAPP_MSG");
@@ -1304,15 +1311,21 @@ const sendMedia = async (
   const mediaBuffer = media.path ? readFileSync(media.path) : media.data;
   if (!mediaBuffer) throw new AppError("ERR_NO_MEDIA_DATA");
 
-  const contextInfo = options?.quotedMessageId
-    ? { stanzaId: options.quotedMessageId, participant: toJid }
+  const quoted = options?.quotedMessageId
+    ? {
+        key: {
+          remoteJid: toJid,
+          fromMe: Boolean(options.quotedMessageFromMe),
+          id: options.quotedMessageId
+        },
+        message: { conversation: options.quotedMessageBody || "" }
+      }
     : undefined;
 
   const buildPayload = () => {
     const base = {
       caption: options?.caption,
-      mimetype: media.mimetype,
-      contextInfo
+      mimetype: media.mimetype
     };
 
     if (media.mimetype.startsWith("image/")) {
@@ -1335,8 +1348,7 @@ const sendMedia = async (
         message: {
           audio: mediaBuffer,
           mimetype: media.mimetype,
-          ptt,
-          contextInfo
+          ptt
         },
         type: ptt ? "ptt" : ("audio" as MessageType)
       };
@@ -1347,8 +1359,7 @@ const sendMedia = async (
         document: mediaBuffer,
         caption: options?.caption,
         mimetype: media.mimetype,
-        fileName: media.filename,
-        contextInfo
+        fileName: media.filename
       },
       type: "document" as MessageType
     };
@@ -1356,7 +1367,11 @@ const sendMedia = async (
 
   const { message, type } = buildPayload();
 
-  const sent = await wbot.sendMessage(toJid, message);
+  const sent = await wbot.sendMessage(
+    toJid,
+    message,
+    quoted ? { quoted } : undefined
+  );
   if (!sent?.key?.id) throw new AppError("ERR_SENDING_WAPP_MEDIA_MSG");
 
   logger.debug({

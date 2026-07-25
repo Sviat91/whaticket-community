@@ -1,6 +1,7 @@
 export interface SendMessageOptions {
   quotedMessageId?: string;
   quotedMessageFromMe?: boolean;
+  quotedMessageBody?: string;
   linkPreview?: boolean;
 }
 
@@ -10,4 +11,5 @@ export interface SendMediaOptions {
   sendMediaAsDocument?: boolean;
   quotedMessageId?: string;
   quotedMessageFromMe?: boolean;
+  quotedMessageBody?: string;
 }
