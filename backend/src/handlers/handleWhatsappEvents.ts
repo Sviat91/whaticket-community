@@ -155,6 +155,10 @@ const handleQueueLogic = async (
 ): Promise<void> => {
   const { queues, greetingMessage } = await ShowWhatsAppService(whatsappId);
 
+  const chatId = contactPayload.number
+    ? `${contactPayload.number}@c.us`
+    : contactPayload.lid || "";
+
   if (queues.length === 1) {
     await UpdateTicketService({
       ticketData: { queueId: queues[0].id },
@@ -178,11 +182,8 @@ const handleQueueLogic = async (
     );
 
     try {
-      await whatsappProvider.sendMessage(
-        whatsappId,
-        `${contactPayload.number}@c.us`,
-        body
-      );
+      if (!chatId) throw new Error("No chatId available for contact");
+      await whatsappProvider.sendMessage(whatsappId, chatId, body);
     } catch (error) {
       logger.error("Error sending queue greeting message:", error);
     }
@@ -200,11 +201,8 @@ const handleQueueLogic = async (
     const debouncedSentMessage = debounce(
       async () => {
         try {
-          await whatsappProvider.sendMessage(
-            whatsappId,
-            `${contactPayload.number}@c.us`,
-            body
-          );
+          if (!chatId) throw new Error("No chatId available for contact");
+          await whatsappProvider.sendMessage(whatsappId, chatId, body);
         } catch (error) {
           logger.error("Error sending queue options message:", error);
         }

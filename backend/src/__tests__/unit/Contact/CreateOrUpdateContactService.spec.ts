@@ -112,4 +112,26 @@ describe("CreateOrUpdateContactService", () => {
     expect(contact.name).toBe("Lid Side Name");
     expect(contact.nameLocked).toBe(true);
   });
+
+  it("should store a null (not empty-string) number for lid-only contacts, allowing multiple to coexist", async () => {
+    const firstContact = await CreateOrUpdateContactService({
+      name: "Lid Only Contact One",
+      number: "",
+      lid: "999999999999999@lid",
+      isGroup: false
+    });
+
+    expect(firstContact.number).toBeFalsy();
+    expect(firstContact.lid).toBe("999999999999999@lid");
+
+    const secondContact = await CreateOrUpdateContactService({
+      name: "Lid Only Contact Two",
+      number: "",
+      lid: "888888888888888@lid",
+      isGroup: false
+    });
+
+    expect(secondContact.number).toBeFalsy();
+    expect(secondContact.lid).toBe("888888888888888@lid");
+  });
 });

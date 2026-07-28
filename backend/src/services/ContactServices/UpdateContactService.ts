@@ -60,7 +60,11 @@ const UpdateContactService = async ({
     );
   }
 
-  const updatePayload: Partial<Contact> = { name, number, email };
+  const updatePayload: Partial<Contact> = {
+    name,
+    number: number || undefined,
+    email
+  };
   if (name && name !== contact.name) {
     updatePayload.nameLocked = true;
   }

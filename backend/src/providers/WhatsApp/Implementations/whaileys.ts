@@ -677,7 +677,7 @@ const convertToContactPayload = async (
   const number =
     (isJidUser(resolvedJid) && decoded?.user) ||
     jidDecode(preferPn || "")?.user ||
-    normalizedJid.split("@")[0];
+    (isLidUser(resolvedJid) ? "" : normalizedJid.split("@")[0]);
 
   const lidValue =
     isLidUser(resolvedJid) && decoded?.user ? `${decoded.user}@lid` : lid;
