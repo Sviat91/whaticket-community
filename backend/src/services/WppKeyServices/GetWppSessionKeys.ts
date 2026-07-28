@@ -13,6 +13,16 @@ interface GetKeysRequest {
 
 const REDIS_KEY_TYPES = ["session", "sender-keys", "sender-key-memory"];
 
+const swapJidSuffix = (id: string): string | null => {
+  if (id.endsWith("@s.whatsapp.net")) {
+    return `${id.slice(0, -"@s.whatsapp.net".length)}@lid`;
+  }
+  if (id.endsWith("@lid")) {
+    return `${id.slice(0, -"@lid".length)}@s.whatsapp.net`;
+  }
+  return null;
+};
+
 const GetWppSessionKeys = async ({
   connectionId,
   deviceId,
@@ -39,13 +49,27 @@ const GetWppSessionKeys = async ({
   try {
     await Promise.all(
       ids.map(async id => {
-        const keyRecord = await WppKey.findOne({
+        let keyRecord = await WppKey.findOne({
           where: {
             connectionId,
             type,
             keyId: id
           }
         });
+
+        if (!keyRecord && type === "contacts-tc-token") {
+          const altId = swapJidSuffix(id);
+
+          if (altId) {
+            keyRecord = await WppKey.findOne({
+              where: {
+                connectionId,
+                type,
+                keyId: altId
+              }
+            });
+          }
+        }
 
         if (keyRecord) {
           data[id] = JSON.parse(keyRecord.value, BufferJSON.reviver);
