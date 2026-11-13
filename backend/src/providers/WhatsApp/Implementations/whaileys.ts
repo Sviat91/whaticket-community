@@ -989,6 +989,18 @@ const init = async (whatsapp: Whatsapp): Promise<void> => {
     debouncedSaveCreds(whatsapp, state.creds);
   });
 
+  wbot.ws.on("CB:ib,,offline_preview", async () => {
+    try {
+      await wbot.sendNode({
+        tag: "ib",
+        attrs: {},
+        content: [{ tag: "offline_batch", attrs: { count: "100" } }]
+      });
+    } catch (err) {
+      logger.error(err, "Error requesting offline batch");
+    }
+  });
+
   wbot.ev.on("messages.upsert", async ({ messages, type }) => {
     messages.forEach(msg => {
       msgCache.save(msg);
@@ -1010,7 +1022,7 @@ const init = async (whatsapp: Whatsapp): Promise<void> => {
 
       if (type === "notify") return true;
 
-      if (type === "append" && msg.key.fromMe) return true;
+      if (type === "append") return true;
 
       return false;
     });
