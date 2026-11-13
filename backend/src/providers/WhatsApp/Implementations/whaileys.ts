@@ -1144,6 +1144,12 @@ const init = async (whatsapp: Whatsapp): Promise<void> => {
       }
 
       logger.info({ info: "Session connected", sessionId });
+
+      setTimeout(() => {
+        wbot.ev.flush().catch(err => {
+          logger.error(err, "Error flushing whaileys event buffer");
+        });
+      }, 10000);
     }
 
     if (qr !== undefined) {
