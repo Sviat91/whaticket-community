@@ -1146,6 +1146,7 @@ const init = async (whatsapp: Whatsapp): Promise<void> => {
       logger.info({ info: "Session connected", sessionId });
 
       setTimeout(() => {
+        if (sessions.get(sessionId) !== wbot) return;
         wbot.ev.flush().catch(err => {
           logger.error(err, "Error flushing whaileys event buffer");
         });

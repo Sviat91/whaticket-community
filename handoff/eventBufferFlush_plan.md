@@ -35,5 +35,9 @@ offline_batch change as-is. Do NOT touch `nameLocked`.
   `Session`/`WASocket` type and use the lib's own types; avoid `any`.
 - [x] 2. `cd backend && npm run build` must pass.
 
+- [x] 3. (Reviewer fix) Guard the timer against stale sockets after reconnect: first line inside the
+  `setTimeout` callback must be `if (sessions.get(sessionId) !== wbot) return;` (`sessions` is the
+  module-level map; `init()` does `sessions.set(sessionId, wbot)` for each new socket). Rebuild.
+
 ## Verify
 - Build passes; `git diff` touches only this spot.
